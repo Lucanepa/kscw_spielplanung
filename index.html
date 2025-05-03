@@ -38,95 +38,92 @@
   </style>
 </head>
 <body>
-  <h4>📅 Team Matches Planning 1.0</h4>
+  <h4>📅 Team Matches Planning 1.1</h4>
   <button class="btn btn-primary mb-3" onclick="loadData()">🔄 Refresh</button>
   <div id="calendar-container"></div>
 
   <script>
-    const teamColor = {};
+      const teamColor = {};
 
-    function getRandomColor() {
-      return '#' + Math.floor(Math.random()*16777215).toString(16);
-    }
+  function getRandomColor() {
+    return '#' + Math.floor(Math.random()*16777215).toString(16);
+  }
 
-    function loadData() {
-      const baseUrl = 'https://script.google.com/macros/s/AKfycbzyckbG-IKtca53X7gnHrVGa6iqi3FCtIIMa6CgP5QW3ECLE6-P1EfX-R_LtdPnyrf9/exec';
+  function loadData() {
+    const baseURL = 'https://script.google.com/macros/s/AKfycbzyckbG-IKtca53X7gnHrVGa6iqi3FCtIIMa6CgP5QW3ECLE6-P1EfX-R_LtdPnyrf9/exec';
 
-      Promise.all([
-    fetch(`${baseURL}?sheet=matches`).then(res => res.json()),
-    fetch(`${baseURL}?sheet=closures`).then(res => res.json())
-  ])
-  .then(([matches, closures]) => {
-    renderCalendar(matches, closures);
-  })
-  .catch(e => console.error('Error:', e));
-}
+    Promise.all([
+      fetch(`${baseURL}?sheet=matches`).then(res => res.json()),
+      fetch(`${baseURL}?sheet=closures`).then(res => res.json())
+    ])
+    .then(([matches, closures]) => {
+      renderCalendar(matches, closures);
+    })
+    .catch(e => console.error('Error:', e));
+  }
 
-document.addEventListener('DOMContentLoaded', loadData);
-    }
+  function renderCalendar(matches, closures) {
+    const container = document.getElementById('calendar-container');
+    container.innerHTML = '';
 
-    function renderCalendar(matches, closures) {
-      const container = document.getElementById('calendar-container');
-      container.innerHTML = '';
-
-      const byMatch = {};
-      matches.forEach(e => {
-        byMatch[e.date] = byMatch[e.date] || [];
-        byMatch[e.date].push(e);
-        if (!teamColor[e.team]) {
-          teamColor[e.team] = getRandomColor();
-        }
-      });
-      Object.keys(byMatch).forEach(date => byMatch[date].sort((a,b) => a.time.localeCompare(b.time)));
-
-      const byClose = {};
-      closures.forEach(c => byClose[c.date] = c.reason.toLowerCase());
-
-      const months = [];
-      let cur = new Date(2025,8,1);
-      const end = new Date(2026,3,1);
-      while (cur <= end) {
-        months.push(`${cur.getFullYear()}-${String(cur.getMonth()+1).padStart(2,'0')}`);
-        cur.setMonth(cur.getMonth()+1);
+    const byMatch = {};
+    matches.forEach(e => {
+      byMatch[e.date] = byMatch[e.date] || [];
+      byMatch[e.date].push(e);
+      if (!teamColor[e.team]) {
+        teamColor[e.team] = getRandomColor();
       }
+    });
+    Object.keys(byMatch).forEach(date => byMatch[date].sort((a,b) => a.time.localeCompare(b.time)));
 
-      const weekdays = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    const byClose = {};
+    closures.forEach(c => byClose[c.date] = c.reason.toLowerCase());
 
-      months.forEach(month => {
-        const [y, MM] = month.split('-').map(Number);
-        const first = new Date(y, MM-1, 1);
-        const last = new Date(y, MM, 0);
-
-        let html = `<table class="calendar"><thead>` +
-                   `<tr><th colspan="7">${first.toLocaleString('en-GB',{month:'long',year:'numeric'})}</th></tr>` +
-                   `<tr>${weekdays.map(d=>`<th>${d}</th>`).join('')}</tr>` +
-                   `</thead><tbody><tr>`;
-
-        const startIdx = (first.getDay()+6)%7;
-        for(let i=0;i<startIdx;i++)html+='<td></td>';
-
-        for(let d=1; d<=last.getDate(); d++) {
-          const ds=`${y}-${String(MM).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-          const evs=byMatch[ds]||[];
-          const reason=byClose[ds];
-
-          let cell=`<td><strong>${d}</strong>`;
-          evs.forEach(e=>cell+=`<div class="match" style="background:${teamColor[e.team]}">${e.time} – ${e.team} (${e.type})</div>`);
-          if(reason){
-            const clr=reason==='holiday'?'#6c757d':'#000';
-            cell+=`<div class="closure" style="background:${clr}">${reason.charAt(0).toUpperCase()+reason.slice(1)}</div>`;
-          }
-          cell+='</td>';
-
-          html+=cell;
-          if((startIdx+d-1)%7===6)html+='</tr><tr>';
-        }
-        html+='</tr></tbody></table>';
-        container.insertAdjacentHTML('beforeend', html);
-      });
+    const months = [];
+    let cur = new Date(2025,8,1);
+    const end = new Date(2026,3,1);
+    while (cur <= end) {
+      months.push(`${cur.getFullYear()}-${String(cur.getMonth()+1).padStart(2,'0')}`);
+      cur.setMonth(cur.getMonth()+1);
     }
 
-    document.addEventListener('DOMContentLoaded', loadData);
+    const weekdays = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+    months.forEach(month => {
+      const [y, MM] = month.split('-').map(Number);
+      const first = new Date(y, MM-1, 1);
+      const last = new Date(y, MM, 0);
+
+      let html = `<table class="calendar"><thead>` +
+                 `<tr><th colspan="7">${first.toLocaleString('en-GB',{month:'long',year:'numeric'})}</th></tr>` +
+                 `<tr>${weekdays.map(d=>`<th>${d}</th>`).join('')}</tr>` +
+                 `</thead><tbody><tr>`;
+
+      const startIdx = (first.getDay()+6)%7;
+      for(let i=0;i<startIdx;i++)html+='<td></td>';
+
+      for(let d=1; d<=last.getDate(); d++) {
+        const ds=`${y}-${String(MM).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const evs=byMatch[ds]||[];
+        const reason=byClose[ds];
+
+        let cell=`<td><strong>${d}</strong>`;
+        evs.forEach(e=>cell+=`<div class="match" style="background:${teamColor[e.team]}">${e.time} – ${e.team} (${e.type})</div>`);
+        if(reason){
+          const clr=reason==='holiday'?'#6c757d':'#000';
+          cell+=`<div class="closure" style="background:${clr}">${reason.charAt(0).toUpperCase()+reason.slice(1)}</div>`;
+        }
+        cell+='</td>';
+
+        html+=cell;
+        if((startIdx+d-1)%7===6)html+='</tr><tr>';
+      }
+      html+='</tr></tbody></table>';
+      container.insertAdjacentHTML('beforeend', html);
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', loadData);
   </script>
 </body>
 </html>
