@@ -50,12 +50,19 @@
     }
 
     function loadData() {
-      const appsScriptUrl = 'https://script.google.com/macros/s/AKfycbyoKlJ4IJgcF2lgVteGx15sR1njyfrZLZYk_5OOz8lld2eT_UGVolw3fwI_mRcTx1ZF/exec';
+      const baseUrl = 'https://script.google.com/macros/s/AKfycbzyckbG-IKtca53X7gnHrVGa6iqi3FCtIIMa6CgP5QW3ECLE6-P1EfX-R_LtdPnyrf9/exec';
 
-      fetch(appsScriptUrl)
-        .then(res => res.json())
-        .then(({matches, closures}) => renderCalendar(matches, closures))
-        .catch(e => console.error('Error:', e));
+      Promise.all([
+    fetch(`${baseURL}?sheet=matches`).then(res => res.json()),
+    fetch(`${baseURL}?sheet=closures`).then(res => res.json())
+  ])
+  .then(([matches, closures]) => {
+    renderCalendar(matches, closures);
+  })
+  .catch(e => console.error('Error:', e));
+}
+
+document.addEventListener('DOMContentLoaded', loadData);
     }
 
     function renderCalendar(matches, closures) {
