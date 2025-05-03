@@ -50,16 +50,27 @@
   }
 
   function loadData() {
-    const baseURL = 'https://script.google.com/macros/s/AKfycbzyckbG-IKtca53X7gnHrVGa6iqi3FCtIIMa6CgP5QW3ECLE6-P1EfX-R_LtdPnyrf9/exec';
+    const baseURL = 'https://script.google.com/macros/s/AKfycbxOLd3uz2pTnk7iSkQFvEtwIlkpxogJjpUkR8lsMx_6re9mSUxb_Vyhx0yeHjD-eJXu/exec';
 
-    Promise.all([
-      fetch(`${baseURL}?sheet=matches`).then(res => res.json()),
-      fetch(`${baseURL}?sheet=closures`).then(res => res.json())
-    ])
-    .then(([matches, closures]) => {
-      renderCalendar(matches, closures);
-    })
-    .catch(e => console.error('Error:', e));
+      Promise.all([
+    fetch(`${baseURL}?sheet=matches`).then(res => res.json()),
+    fetch(`${baseURL}?sheet=closures`).then(res => res.json()),
+    fetch(`${baseURL}?sheet=preferences`).then(res => res.json())
+  ])
+  .then(([matches, closures, preferences]) => {
+    // Transform preferences into match-like events for simplicity
+    preferences.forEach(pref => {
+      matches.push({
+        team: pref.team,
+        date: pref.date,
+        time: pref.allDay ? '' : pref.description.match(/from (\d{2}:\d{2})/)[1],
+        type: pref.description
+      });
+    });
+
+    renderCalendar(matches, closures);
+  })
+  .catch(e => console.error('Error:', e));
   }
 
   function renderCalendar(matches, closures) {
