@@ -49,6 +49,12 @@
   <div id="calendar-container"></div>
 
   <script>
+    // === CONFIGURE THESE ===
+    const SPREADSHEET_ID = '1RqqdNWuNdAa1QiRG9N7bytlDko0Sn80Xtm0n1m3YyEY';
+    const API_KEY       = 'AIzaSyB4tX_WxrFRajdEdqVI-yTWV0uRNqJQkfc';
+    const RANGES        = ['Team_Matches','Closed','Team_Preferences'];
+
+    // Predefined team colors
     const teamColor = {
       'Damen 1': '#e74c3c',
       'Damen 2': '#f39c12',
@@ -62,39 +68,96 @@
       'HU23':    '#7f8c8d'
     };
 
+    // Fallback color generator
     function getRandomColor() {
       return '#' + Math.floor(Math.random() * 0xFFFFFF)
                       .toString(16)
                       .padStart(6, '0');
     }
 
-    function loadData() {
-      const baseURL = 'https://script.google.com/macros/s/.../exec';
-      Promise.all([
-        fetch(`${baseURL}?sheet=matches`).then(r => r.json()),
-        fetch(`${baseURL}?sheet=closures`).then(r => r.json()),
-        fetch(`${baseURL}?sheet=preferences`).then(r => r.json())
-      ])
-      .then(([matches, closures, preferences]) => {
-        preferences.forEach(pref => {
-          matches.push({
-            team: pref.team,
-            date: pref.date,
-            time: pref.allDay 
-                  ? '' 
-                  : (pref.description.match(/from (\d{2}:\d{2})/)[1] || ''),
-            type: pref.description
-          });
-        });
-        renderCalendar(matches, closures);
-      })
-      .catch(console.error);
+    // "dd/mm/yyyy" → "yyyy-MM-dd"
+    function parseDateDMY(dmy) {
+      const [d, m, y] = dmy.split('/');
+      return `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
     }
 
+    // Fetch & process all three sheets, then render
+    async function loadData() {
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values:batchGet?`
+        + RANGES.map(r => `ranges=${encodeURIComponent(r)}`).join('&')
+        + `&majorDimension=ROWS&key=${API_KEY}`;
+
+      const res = await fetch(url);
+      if (!res.ok) {
+        const err = await res.text();
+        console.error('Sheets API error:', err);
+        return;
+      }
+      const { valueRanges } = await res.json();
+
+      // 1) Matches
+      const rawMatches = valueRanges[0].values || [];
+      const matches = rawMatches.slice(1).map(r => ({
+        team: r[0],
+        date: parseDateDMY(r[2]),
+        time: r[3],
+        type: r[4]
+      }));
+
+      // 2) Closures (expand date ranges)
+      const rawClosures = valueRanges[1].values || [];
+      const closures = [];
+      rawClosures.slice(1).forEach(r => {
+        const from   = new Date(parseDateDMY(r[0]));
+        const to     = new Date(parseDateDMY(r[1]));
+        const reason = r[2].toLowerCase();
+        for (let d = new Date(from); d <= to; d.setDate(d.getDate()+1)) {
+          closures.push({
+            date: d.toISOString().slice(0,10),
+            reason
+          });
+        }
+      });
+
+      // 3) Preferences (expand date ranges + build descriptions)
+      const rawPrefs = valueRanges[2].values || [];
+      const preferences = [];
+      rawPrefs.slice(1).forEach(r => {
+        const [team,pref,allDay,dateFrom,dateTo,timeFrom,timeTo] = r;
+        if (!team || !pref || !dateFrom || !dateTo) return;
+        const isAllDay = String(allDay).toLowerCase() === 'yes';
+        const start = new Date(parseDateDMY(dateFrom));
+        const end   = new Date(parseDateDMY(dateTo));
+        for (let d = new Date(start); d <= end; d.setDate(d.getDate()+1)) {
+          const iso  = d.toISOString().slice(0,10);
+          const desc = isAllDay
+            ? `Team ${team} ${pref.toUpperCase()}`
+            : `Team ${team} ${pref.toUpperCase()} from ${timeFrom} to ${timeTo}`;
+          preferences.push({ team, date: iso, description: desc, allDay: isAllDay });
+        }
+      });
+
+      // 4) Merge preferences into matches for a unified render
+      preferences.forEach(pref => {
+        matches.push({
+          team: pref.team,
+          date: pref.date,
+          time: pref.allDay 
+            ? '' 
+            : (pref.description.match(/from (\d{2}:\d{2})/)||[])[1] || '',
+          type: pref.description
+        });
+      });
+
+      renderCalendar(matches, closures);
+    }
+
+    // Renders month-by-month calendar tables
     function renderCalendar(matches, closures) {
       const container = document.getElementById('calendar-container');
       container.innerHTML = '';
 
+      // Index matches by date and sort
       const byMatch = {};
       matches.forEach(e => {
         byMatch[e.date] = byMatch[e.date] || [];
@@ -105,10 +168,11 @@
         arr.sort((a, b) => a.time.localeCompare(b.time))
       );
 
+      // Index closures by date
       const byClose = {};
-      closures.forEach(c => { byClose[c.date] = c.reason.toLowerCase(); });
+      closures.forEach(c => { byClose[c.date] = c.reason; });
 
-      // Example range: Sep 2025 → Apr 2026
+      // Build months from Sep 2025 → Apr 2026
       const months = [];
       let cur = new Date(2025, 8, 1), end = new Date(2026, 3, 1);
       while (cur <= end) {
@@ -117,44 +181,62 @@
       }
 
       const weekdays = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
       months.forEach(dateObj => {
-        const y = dateObj.getFullYear(), m = dateObj.getMonth();
-        const first = new Date(y, m, 1), last = new Date(y, m + 1, 0);
+        const y = dateObj.getFullYear(),
+              m = dateObj.getMonth(),
+              first = new Date(y, m, 1),
+              last  = new Date(y, m + 1, 0);
+
+        // Table header
         let html = `
           <table class="calendar">
             <thead>
-              <tr><th colspan="7">${first.toLocaleString('en-GB',{month:'long',year:'numeric'})}</th></tr>
+              <tr>
+                <th colspan="7">${first.toLocaleString('en-GB',{month:'long',year:'numeric'})}</th>
+              </tr>
               <tr>${weekdays.map(d=>`<th>${d}</th>`).join('')}</tr>
             </thead>
             <tbody><tr>`;
 
+        // Blank cells before month start
         const startIdx = (first.getDay() + 6) % 7;
-        html += '<td>'.repeat(startIdx).replace(/<td>/g,'<td></td>');
+        html += '<td></td>'.repeat(startIdx);
 
+        // Fill days
         for (let d = 1; d <= last.getDate(); d++) {
-          const key = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-          const evs = byMatch[key] || [], reason = byClose[key];
+          const key    = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+          const evs    = byMatch[key] || [];
+          const reason = byClose[key];
           let cell = `<td><strong>${d}</strong>`;
+
           evs.forEach(e => {
             cell += `<div class="match" style="background:${teamColor[e.team]}">
                        ${e.time} – ${e.team} (${e.type})
                      </div>`;
           });
+
           if (reason) {
             const clr = reason === 'holiday' ? '#6c757d' : '#000';
             cell += `<div class="closure" style="background:${clr}">
                        ${reason.charAt(0).toUpperCase() + reason.slice(1)}
                      </div>`;
           }
+
           cell += '</td>';
           html += cell;
+
+          // New row every Sunday
           if ((startIdx + d - 1) % 7 === 6) html += '</tr><tr>';
         }
+
+        // Close final row & table
         html += '</tr></tbody></table>';
         container.insertAdjacentHTML('beforeend', html);
       });
     }
 
+    // Kick it off on page load
     document.addEventListener('DOMContentLoaded', loadData);
   </script>
 </body>
