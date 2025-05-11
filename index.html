@@ -41,10 +41,16 @@
       font-size: 12px;
       color: white;
     }
+    .preference {
+  border: 1px dashed #17a2b8;      /* dashed border in teal */
+  background: rgba(23,162,184,0.1); /* very light teal fill */
+  font-style: italic;
+  color: #0c5460;                   /* dark teal text */
+}
   </style>
 </head>
 <body>
-  <h4>📅 Team Matches Planning 1.4</h4>
+  <h4>📅 Team Matches Planning 2</h4>
   <button class="btn btn-primary mb-3" onclick="loadData()">🔄 Refresh</button>
   <div id="calendar-container"></div>
 
@@ -139,14 +145,13 @@
 
       // 4) Merge preferences into matches for a unified render
       preferences.forEach(pref => {
-        matches.push({
-          team: pref.team,
-          date: pref.date,
-          time: pref.allDay 
-            ? '' 
-            : (pref.description.match(/from (\d{2}:\d{2})/)||[])[1] || '',
-          type: pref.description
-        });
+       matches.push({
+        team: pref.team,
+        date: pref.date,
+        time: pref.allDay ? '' : (pref.description.match(/from (\d{2}:\d{2})/)||[])[1] || '',
+        type: pref.description,
+        isPref: true     // ← flag it as a preference
+      });
       });
 
       renderCalendar(matches, closures);
@@ -210,11 +215,17 @@
           const reason = byClose[key];
           let cell = `<td><strong>${d}</strong>`;
 
-          evs.forEach(e => {
-            cell += `<div class="match" style="background:${teamColor[e.team]}">
-                       ${e.time} – ${e.team} (${e.type})
-                     </div>`;
-          });
+         evs.forEach(e => {
+  // choose class & inline‐style
+  const cls   = e.isPref ? 'preference' : 'match';
+  const style = e.isPref
+    ? ''  // let your CSS handle it
+    : `background:${teamColor[e.team]}`;
+
+  cell += `<div class="${cls}" style="${style}">
+             ${e.isPref ? '🔹 ' : ''}${e.time} – ${e.team} (${e.type})
+           </div>`;
+});
 
           if (reason) {
             const clr = reason === 'holiday' ? '#6c757d' : '#000';
