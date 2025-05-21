@@ -42,15 +42,15 @@
       color: white;
     }
     .preference {
-  border: 1px dashed #17a2b8;      /* dashed border in teal */
-  background: rgba(23,162,184,0.1); /* very light teal fill */
-  font-style: italic;
-  color: #0c5460;                   /* dark teal text */
-}
+      border: 1px dashed #17a2b8; /* dashed border in teal */
+      background: rgba(23,162,184,0.1); /* very light teal fill */
+      font-style: italic;
+      color: #0c5460; /* dark teal text */
+    }
   </style>
 </head>
 <body>
-  <h4>📅 Team Matches Planning 2</h4>
+  <h4>📅 Team Matches Planning 3</h4>
   <button class="btn btn-primary mb-3" onclick="loadData()">🔄 Refresh</button>
   <div id="calendar-container"></div>
 
@@ -95,8 +95,7 @@
 
       const res = await fetch(url);
       if (!res.ok) {
-        const err = await res.text();
-        console.error('Sheets API error:', err);
+        console.error('Sheets API error:', await res.text());
         return;
       }
       const { valueRanges } = await res.json();
@@ -125,33 +124,48 @@
         }
       });
 
-      // 3) Preferences (expand date ranges + build descriptions)
+      // 3) Preferences (header-lookup → expand ranges + build descriptions)
       const rawPrefs = valueRanges[2].values || [];
       const preferences = [];
-      rawPrefs.slice(1).forEach(r => {
-        const [team,pref,allDay,dateFrom,dateTo,timeFrom,timeTo] = r;
-        if (!team || !pref || !dateFrom || !dateTo) return;
-        const isAllDay = String(allDay).toLowerCase() === 'yes';
-        const start = new Date(parseDateDMY(dateFrom));
-        const end   = new Date(parseDateDMY(dateTo));
-        for (let d = new Date(start); d <= end; d.setDate(d.getDate()+1)) {
-          const iso  = d.toISOString().slice(0,10);
-          const desc = isAllDay
-            ? `Team ${team} ${pref.toUpperCase()}`
-            : `Team ${team} ${pref.toUpperCase()} from ${timeFrom} to ${timeTo}`;
-          preferences.push({ team, date: iso, description: desc, allDay: isAllDay });
-        }
-      });
+      if (rawPrefs.length) {
+        const headers = rawPrefs[0];
+        const idx = name => headers.indexOf(name);
 
-      // 4) Merge preferences into matches for a unified render
+        rawPrefs.slice(1).forEach(r => {
+          const team     = r[idx('Team')];
+          const pref     = r[idx('Preference')];
+          const allDay   = r[idx('All day?')];
+          const dateFrom = r[idx('Date from')];
+          const dateTo   = r[idx('Date to')];
+          const timeFrom = r[idx('Time from')];
+          const timeTo   = r[idx('Time to')];
+
+          if (!team || !pref || !dateFrom || !dateTo) return;
+
+          const isAllDay = String(allDay).toLowerCase() === 'yes';
+          const start = new Date(parseDateDMY(dateFrom));
+          const end   = new Date(parseDateDMY(dateTo));
+
+          for (let d = new Date(start); d <= end; d.setDate(d.getDate()+1)) {
+            const iso  = d.toISOString().slice(0,10);
+            const desc = isAllDay
+              ? `Team ${team} ${pref.toUpperCase()}`
+              : `Team ${team} ${pref.toUpperCase()} from ${timeFrom} to ${timeTo}`;
+
+            preferences.push({ team, date: iso, description: desc, allDay: isAllDay });
+          }
+        });
+      }
+
+      // 4) Merge preferences into matches
       preferences.forEach(pref => {
-       matches.push({
-        team: pref.team,
-        date: pref.date,
-        time: pref.allDay ? '' : (pref.description.match(/from (\d{2}:\d{2})/)||[])[1] || '',
-        type: pref.description,
-        isPref: true     // ← flag it as a preference
-      });
+        matches.push({
+          team: pref.team,
+          date: pref.date,
+          time: pref.allDay ? '' : (pref.description.match(/from (\d{2}:\d{2})/)||[])[1] || '',
+          type: pref.description,
+          isPref: true
+        });
       });
 
       renderCalendar(matches, closures);
@@ -188,66 +202,52 @@
       const weekdays = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 
       months.forEach(dateObj => {
-        const y = dateObj.getFullYear(),
-              m = dateObj.getMonth(),
-              first = new Date(y, m, 1),
-              last  = new Date(y, m + 1, 0);
+        const y = dateObj.getFullYear(), m = dateObj.getMonth();
+        const first = new Date(y, m, 1), last  = new Date(y, m + 1, 0);
 
-        // Table header
         let html = `
           <table class="calendar">
             <thead>
-              <tr>
-                <th colspan="7">${first.toLocaleString('en-GB',{month:'long',year:'numeric'})}</th>
-              </tr>
+              <tr><th colspan="7">${first.toLocaleString('en-GB',{month:'long',year:'numeric'})}</th></tr>
               <tr>${weekdays.map(d=>`<th>${d}</th>`).join('')}</tr>
             </thead>
             <tbody><tr>`;
 
-        // Blank cells before month start
         const startIdx = (first.getDay() + 6) % 7;
         html += '<td></td>'.repeat(startIdx);
 
-        // Fill days
         for (let d = 1; d <= last.getDate(); d++) {
           const key    = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
           const evs    = byMatch[key] || [];
           const reason = byClose[key];
           let cell = `<td><strong>${d}</strong>`;
 
-         evs.forEach(e => {
-  // choose class & inline‐style
-  const cls   = e.isPref ? 'preference' : 'match';
-  const style = e.isPref
-    ? ''  // let your CSS handle it
-    : `background:${teamColor[e.team]}`;
-
-  cell += `<div class="${cls}" style="${style}">
-             ${e.isPref ? '🔹 ' : ''}${e.time} – ${e.team} (${e.type})
-           </div>`;
-});
+          evs.forEach(e => {
+            const cls   = e.isPref ? 'preference' : 'match';
+            const style = e.isPref ? '' : `background:${teamColor[e.team]}`;
+            cell += `<div class="${cls}" style="${style}">` +
+                    `${e.isPref ? '🔹 ' : ''}${e.time} – ${e.team} (${e.type})` +
+                    `</div>`;
+          });
 
           if (reason) {
             const clr = reason === 'holiday' ? '#6c757d' : '#000';
-            cell += `<div class="closure" style="background:${clr}">
-                       ${reason.charAt(0).toUpperCase() + reason.slice(1)}
-                     </div>`;
+            cell += `<div class="closure" style="background:${clr}">` +
+                    `${reason.charAt(0).toUpperCase() + reason.slice(1)}` +
+                    `</div>`;
           }
 
           cell += '</td>';
           html += cell;
 
-          // New row every Sunday
           if ((startIdx + d - 1) % 7 === 6) html += '</tr><tr>';
         }
 
-        // Close final row & table
         html += '</tr></tbody></table>';
         container.insertAdjacentHTML('beforeend', html);
       });
     }
 
-    // Kick it off on page load
     document.addEventListener('DOMContentLoaded', loadData);
   </script>
 </body>
