@@ -63,7 +63,7 @@
   <script>
     // === CONFIG ===
     const SPREADSHEET_ID = '16hr2bshVSHoQGZ73xGZiJpnhlBwu6Mn3I5YC4Z-ixXY';
-    const API_KEY        = 'AIzaSyB4tX_WxrFRajdEdqVI-yTWV0uRNqJQkfc';
+    const API_KEY        = 'AIzaSyB4tX_WxrFRajdEdqVI-yTWV0uRNqJQkfc'; // Replace with your actual API key
     const RANGES         = [
       'Luca - Team_Matches',
       'Luca - Gym Closed',
@@ -104,6 +104,7 @@
       const res = await fetch(url);
       if (!res.ok) {
         console.error('Sheets API error:', await res.text());
+        alert('Failed to load data from Google Sheets. Check console for details.');
         return;
       }
       const { valueRanges } = await res.json();
@@ -115,7 +116,6 @@
         return;
       }
 
-      // normalize headers once
       const headers = rawMatches[0]
         .map(h => h ? h.toString().trim().toLowerCase() : '');
       const idx = name => headers.indexOf(name.toLowerCase());
@@ -126,9 +126,10 @@
       const iTime   = idx('time');
       const iType   = idx('type');
       const iStatus = idx('status');
+      const iGym    = idx('gym/halle'); // New column index
 
-      console.log('HEADERS:', headers);
-      console.log({ iTeam, iOpp, iDate, iTime, iType, iStatus });
+      console.log('MATCH HEADERS:', headers);
+      console.log({ iTeam, iOpp, iDate, iTime, iType, iStatus, iGym });
 
       let matches = rawMatches.slice(1).map(r => {
         const dateRaw = r[iDate] || '';
@@ -140,23 +141,30 @@
           time:     r[iTime]   || '',
           type:     r[iType]   || '',
           status:   r[iStatus] || '',
+          gym:      r[iGym]    || '', // Store gym information
           isPref:   false
         };
       })
-      // filter out any that didn’t get a valid YYYY-MM-DD
       .filter(m => /^\d{4}-\d{2}-\d{2}$/.test(m.date));
 
       // 2) CLOSURES
       const rawClosures = valueRanges[1].values || [];
       const closures = [];
-      rawClosures.slice(1).forEach(r => {
-        const from = new Date(parseDateDMY(r[0]));
-        const to   = new Date(parseDateDMY(r[1]));
-        const reason = (r[2]||'').toLowerCase();
-        for (let d = new Date(from); d <= to; d.setDate(d.getDate()+1)) {
-          closures.push({ date: d.toISOString().slice(0,10), reason });
-        }
-      });
+      if (rawClosures.length > 1) {
+          rawClosures.slice(1).forEach(r => {
+            const fromDateStr = parseDateDMY(r[0]);
+            const toDateStr = parseDateDMY(r[1]);
+            if (!fromDateStr || !toDateStr) return;
+
+            const from = new Date(fromDateStr);
+            const to   = new Date(toDateStr);
+            const reason = (r[2]||'').toLowerCase();
+            for (let d = new Date(from); d <= to; d.setDate(d.getDate()+1)) {
+              closures.push({ date: d.toISOString().slice(0,10), reason });
+            }
+          });
+      }
+
 
       // 3) PREFERENCES
       const rawPrefs = valueRanges[2].values || [];
@@ -172,18 +180,32 @@
           const timeFrom = r[pIdx('time from')];
           const timeTo   = r[pIdx('time to')];
           if (!team || !pref || !dateFrom || !dateTo) return;
+
           const isAll = String(allDay).toLowerCase() === 'yes';
-          const start = new Date(parseDateDMY(dateFrom));
-          const end   = new Date(parseDateDMY(dateTo));
+          const startDateStr = parseDateDMY(dateFrom);
+          const endDateStr = parseDateDMY(dateTo);
+          if (!startDateStr || !endDateStr) return;
+
+          const start = new Date(startDateStr);
+          const end   = new Date(endDateStr);
+
           for (let d = new Date(start); d <= end; d.setDate(d.getDate()+1)) {
             const iso = d.toISOString().slice(0,10);
-            const desc = isAll
-                       ? `Team ${team} ${pref.toUpperCase()}`
-                       : `Team ${team} ${pref.toUpperCase()} from ${timeFrom} to ${timeTo}`;
+            let desc = `Team ${team} ${pref.toUpperCase()}`;
+            let prefTime = '';
+            if (!isAll && timeFrom && timeTo) {
+                desc += ` from ${timeFrom} to ${timeTo}`;
+                prefTime = timeFrom;
+            } else if (!isAll && timeFrom) { // Handle if only timeFrom is provided
+                desc += ` from ${timeFrom}`;
+                prefTime = timeFrom;
+            }
+
+
             matches.push({
               team, opponent: '', date: iso,
-              time: isAll ? '' : (desc.match(/from (\d{2}:\d{2})/)||[])[1]||'',
-              type: desc, status: '', isPref: true
+              time: prefTime,
+              type: desc, status: '', isPref: true, gym: ''
             });
           }
         });
@@ -196,22 +218,20 @@
       const container = document.getElementById('calendar-container');
       container.innerHTML = '';
 
-      // index by date
       const byMatch = {};
       matches.forEach(e => {
         byMatch[e.date] = byMatch[e.date] || [];
         byMatch[e.date].push(e);
-        if (!teamColor[e.team]) teamColor[e.team] = getRandomColor();
+        if (!teamColor[e.team] && e.team) teamColor[e.team] = getRandomColor();
       });
       Object.values(byMatch).forEach(arr =>
-        arr.sort((a,b) => a.time.localeCompare(b.time))
+        arr.sort((a,b) => (a.time || '00:00').localeCompare(b.time || '00:00'))
       );
       const byClose = {};
       closures.forEach(c => byClose[c.date] = c.reason);
 
-      // months Sep 2025 → Apr 2026
       const months = [];
-      let cur = new Date(2025,8,1), end = new Date(2026,3,1);
+      let cur = new Date(2025,8,1), end = new Date(2026,3,30); // Extended to end of April
       while (cur <= end) {
         months.push(new Date(cur));
         cur.setMonth(cur.getMonth()+1);
@@ -239,28 +259,72 @@
           let cell = `<td><strong>${d}</strong>`;
 
           evs.forEach(e => {
-            // decide home/away
-            let display = '';
-            if (!e.isPref && e.opponent) {
-              const t = e.type.toLowerCase();
-              if (t.includes('home'))      display = `${e.team} - ${e.opponent}`;
-              else if (t.includes('away')) display = `${e.opponent} - ${e.team}`;
-              else                          display = `${e.team} vs ${e.opponent}`;
-            }
-            // style: waiting → border only, else background
-            let style = '';
-            if (!e.isPref) {
-              if (e.status.trim().toLowerCase() === 'waiting') {
-                style = `border:1px solid ${teamColor[e.team]}`;
+            let mainDisplayInfo = '';
+            let additionalInfoLine = ''; // For "Type - Gym" or similar
+
+            if (!e.isPref) { // This is a Match
+              let teamVsOpponent = '';
+              const tLower = e.type ? e.type.toLowerCase() : '';
+              if (e.opponent) {
+                if (tLower.includes('home'))      teamVsOpponent = `${e.team} - ${e.opponent}`;
+                else if (tLower.includes('away')) teamVsOpponent = `${e.opponent} - ${e.team}`;
+                else                              teamVsOpponent = `${e.team} vs ${e.opponent}`;
               } else {
-                style = `background:${teamColor[e.team]}`;
+                teamVsOpponent = e.team; // E.g., for training
+              }
+              mainDisplayInfo = teamVsOpponent;
+
+              let typeAndGym = '';
+              if (e.type) {
+                typeAndGym = e.type;
+                if (e.gym) {
+                  typeAndGym += ` - ${e.gym}`;
+                }
+              } else if (e.gym) { // Only gym is present
+                typeAndGym = e.gym;
+              }
+              if (typeAndGym) {
+                additionalInfoLine = typeAndGym;
+              }
+
+            } else { // This is a Preference
+              mainDisplayInfo = e.type; // e.type for preference is already descriptive
+            }
+
+            let style = '';
+            if (!e.isPref && e.team) {
+              if (e.status.trim().toLowerCase() === 'waiting') {
+                style = `border:1px solid ${teamColor[e.team] || '#ccc'}`;
+              } else {
+                style = `background:${teamColor[e.team] || getRandomColor()}`;
               }
             }
 
+            let entryText = '';
+            if (e.isPref) entryText += '🔹 ';
+            if (e.time) {
+                entryText += e.time;
+                if (mainDisplayInfo) entryText += ' – ';
+            }
+            // If no time but there's info, and it's not a preference (which already has its marker)
+            // ensure mainDisplayInfo is added even if time is missing.
+            // For preferences, if time is missing, we don't want a ' – '.
+            if (mainDisplayInfo) {
+                if (!e.time && e.isPref) { // Preference, no time, no leading separator
+                    entryText += mainDisplayInfo;
+                } else if (!e.time && !e.isPref && mainDisplayInfo) { // Match, no time, no leading separator
+                    entryText += mainDisplayInfo;
+                }
+                else if (e.time) { // Time is present, separator already added
+                    entryText += mainDisplayInfo;
+                }
+            }
+
+
             cell += `<div class="${e.isPref ? 'preference':'match'}" style="${style}">
-                       ${e.isPref?'🔹 ':''}${e.time}${display?' – '+display:''}
-                       ${e.status?`<small class="status">${e.status}</small>`:''}
-                       <br><em>(${e.type})</em>
+                       ${entryText}
+                       ${e.status ? `<small class="status">${e.status}</small>` : ''}
+                       ${additionalInfoLine ? `<br>${additionalInfoLine}` : ''}
                      </div>`;
           });
 
@@ -274,6 +338,9 @@
           html += cell;
           if ((offset + d - 1) % 7 === 6) html += '</tr><tr>';
         }
+        // Fill remaining cells in the last row if any
+        const remainingCells = (7 - (offset + last.getDate()) % 7) % 7;
+        html += '<td></td>'.repeat(remainingCells);
 
         html += '</tr></tbody></table>';
         container.insertAdjacentHTML('beforeend', html);
