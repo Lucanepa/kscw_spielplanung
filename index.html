@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Team Matches Calendar v7</title>
+  <title>Team Matches Calendar v8</title>
   <link 
     href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" 
     rel="stylesheet"
@@ -21,7 +21,7 @@
       position: relative;
     }
     .calendar th { background: #007bff; color: white; }
-    .match {
+    .match, .preference {
       display: block;
       margin: 2px 0;
       padding: 2px 4px;
@@ -34,6 +34,7 @@
       position: absolute;
       top: 2px; right: 4px;
       color: #555;
+      font-size: 9px;
     }
     .closure {
       position: absolute;
@@ -55,7 +56,7 @@
   </style>
 </head>
 <body>
-  <h4>📅 Team Matches Planning v7</h4>
+  <h4>📅 Team Matches Planning v8</h4>
   <button class="btn btn-primary mb-3" onclick="loadData()">🔄 Refresh</button>
   <div id="calendar-container"></div>
 
@@ -109,9 +110,7 @@
       }
       const { valueRanges } = await res.json();
 
-      // —————————————————————————————
       // 1) MATCHES
-      // —————————————————————————————
       const rawMatches = valueRanges[0].values || [];
       if (rawMatches.length < 2) {
         console.warn('No match data found.');
@@ -119,7 +118,7 @@
         return;
       }
 
-      // normalize headers
+      // normalize & index headers
       const headers = rawMatches[0]
         .map(h => h ? h.toString().trim().toLowerCase() : '');
       const idx = name => headers.indexOf(name.toLowerCase());
@@ -145,14 +144,13 @@
             date:     parseDateDMY(d),
             time:     r[iTime]   || '',
             type:     r[iType]   || '',
-            status:   r[iStatus] || ''
+            status:   r[iStatus] || '',
+            isPref:   false
           };
         })
         .filter(x => x);
 
-      // —————————————————————————————
       // 2) CLOSURES
-      // —————————————————————————————
       const rawClosures = valueRanges[1].values || [];
       const closures = [];
       rawClosures.slice(1).forEach(r => {
@@ -160,22 +158,16 @@
         const to     = new Date(parseDateDMY(r[1]));
         const reason = (r[2] || '').toLowerCase();
         for (let d = new Date(from); d <= to; d.setDate(d.getDate()+1)) {
-          closures.push({
-            date:   d.toISOString().slice(0,10),
-            reason
-          });
+          closures.push({ date: d.toISOString().slice(0,10), reason });
         }
       });
 
-      // —————————————————————————————
       // 3) PREFERENCES
-      // —————————————————————————————
       const rawPrefs = valueRanges[2].values || [];
       const preferences = [];
       if (rawPrefs.length > 1) {
         const pHeaders = rawPrefs[0].map(h => h && h.toString().trim().toLowerCase());
         const pIdx     = name => pHeaders.indexOf(name.toLowerCase());
-
         rawPrefs.slice(1).forEach(r => {
           const team     = r[pIdx('team')];
           const pref     = r[pIdx('preference')];
@@ -199,18 +191,15 @@
         });
       }
 
-      // merge
       preferences.forEach(pref => {
         matches.push({
-          team: pref.team,
-          date: pref.date,
-          time: pref.allDay
-                ? ''
-                : ( (pref.description.match(/from (\d{2}:\d{2})/)||[])[1] || '' ),
-          type: pref.description,
-          isPref: true,
+          team:     pref.team,
           opponent: '',
-          status: ''
+          date:     pref.date,
+          time:     pref.allDay ? '' : ((pref.description.match(/from (\d{2}:\d{2})/)||[])[1] || ''),
+          type:     pref.description,
+          status:   '',
+          isPref:   true
         });
       });
 
@@ -221,7 +210,7 @@
       const container = document.getElementById('calendar-container');
       container.innerHTML = '';
 
-      // index
+      // index matches by date
       const byMatch = {};
       matches.forEach(e => {
         byMatch[e.date] = byMatch[e.date] || [];
@@ -234,7 +223,7 @@
       const byClose = {};
       closures.forEach(c => { byClose[c.date] = c.reason; });
 
-      // months
+      // month loop
       const months = [];
       let cur = new Date(2025,8,1), end = new Date(2026,3,1);
       while (cur <= end) {
@@ -264,11 +253,32 @@
           let cell = `<td><strong>${d}</strong>`;
 
           evs.forEach(e => {
-            const cls   = e.isPref ? 'preference' : 'match';
-            const style = e.isPref ? '' : `background:${teamColor[e.team]}`;
-            cell += `<div class="${cls}" style="${style}">
-                       ${e.isPref ? '🔹 ' : ''}${e.time} – ${e.team}
-                       ${e.opponent ? ` vs ${e.opponent}` : ''}
+            // determine home/away display
+            let matchup = '';
+            const t = e.type.toLowerCase();
+            if (!e.isPref && e.opponent) {
+              if (t.includes('home')) {
+                matchup = `${e.team} - ${e.opponent}`;
+              } else if (t.includes('away')) {
+                matchup = `${e.opponent} - ${e.team}`;
+              } else {
+                matchup = `${e.team} vs ${e.opponent}`;
+              }
+            }
+
+            // choose styling based on status
+            const status = e.status.trim().toLowerCase();
+            let style = '';
+            if (!e.isPref) {
+              if (status === 'waiting') {
+                style = `border:1px solid ${teamColor[e.team]}`;
+              } else {
+                style = `background:${teamColor[e.team]}`;
+              }
+            }
+
+            html += `<div class="${e.isPref ? 'preference' : 'match'}" style="${style}">
+                       ${e.isPref ? '🔹 ' : ''}${e.time}${matchup ? ' – '+matchup : ''}
                        ${e.status ? `<small class="status">${e.status}</small>` : ''}
                        <br><em>(${e.type})</em>
                      </div>`;
