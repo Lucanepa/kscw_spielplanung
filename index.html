@@ -102,13 +102,22 @@
 
       // 1) Matches
       const rawMatches = valueRanges[0].values || [];
-      const matches = rawMatches.slice(1).map(r => ({
-        team: r[0],
-        date: parseDateDMY(r[2]),
-        time: r[3],
-        type: r[4]
-      }));
 
+const headers   = rawMatches[0];
+const idx       = name => headers.indexOf(name);
+const iTeam     = idx('Team');
+const iOpp      = idx('Opponent');
+const iDate     = idx('Date');
+const iTime     = idx('Time');
+const iType     = idx('Type');
+
+const matches = rawMatches.slice(1).map(r => ({
+  team:     r[iTeam],
+  opponent: r[iOpp],
+  date:     parseDateDMY(r[iDate]),
+  time:     r[iTime],
+  type:     r[iType]
+}));
       // 2) Closures (expand date ranges)
       const rawClosures = valueRanges[1].values || [];
       const closures = [];
