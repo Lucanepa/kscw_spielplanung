@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Team Matches Calendar v8</title>
+  <title>Team Matches Calendar v9</title>
   <link 
     href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" 
     rel="stylesheet"
@@ -56,7 +56,7 @@
   </style>
 </head>
 <body>
-  <h4>📅 Team Matches Planning v8</h4>
+  <h4>📅 Team Matches Planning v9</h4>
   <button class="btn btn-primary mb-3" onclick="loadData()">🔄 Refresh</button>
   <div id="calendar-container"></div>
 
@@ -88,13 +88,11 @@
                       .toString(16).padStart(6, '0');
     }
 
-    // Safe parser: never throws
+    // never throws, returns '' if invalid
     function parseDateDMY(dmy='') {
-      if (typeof dmy !== 'string' || !dmy.includes('/')) {
-        console.warn('Invalid date string:', dmy);
-        return '';
-      }
+      if (typeof dmy !== 'string' || !dmy.includes('/')) return '';
       const [d, m, y] = dmy.split('/');
+      if (!d || !m || !y) return '';
       return `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
     }
 
@@ -113,12 +111,11 @@
       // 1) MATCHES
       const rawMatches = valueRanges[0].values || [];
       if (rawMatches.length < 2) {
-        console.warn('No match data found.');
         renderCalendar([], []);
         return;
       }
 
-      // normalize & index headers
+      // normalize headers once
       const headers = rawMatches[0]
         .map(h => h ? h.toString().trim().toLowerCase() : '');
       const idx = name => headers.indexOf(name.toLowerCase());
@@ -130,33 +127,32 @@
       const iType   = idx('type');
       const iStatus = idx('status');
 
-      console.log('Match headers:', headers);
+      console.log('HEADERS:', headers);
       console.log({ iTeam, iOpp, iDate, iTime, iType, iStatus });
 
-      const matches = rawMatches
-        .slice(1)
-        .map(r => {
-          const d = r[iDate] || '';
-          if (!d) return null;
-          return {
-            team:     r[iTeam]   || '',
-            opponent: r[iOpp]    || '',
-            date:     parseDateDMY(d),
-            time:     r[iTime]   || '',
-            type:     r[iType]   || '',
-            status:   r[iStatus] || '',
-            isPref:   false
-          };
-        })
-        .filter(x => x);
+      let matches = rawMatches.slice(1).map(r => {
+        const dateRaw = r[iDate] || '';
+        const isoDate = parseDateDMY(dateRaw);
+        return {
+          team:     r[iTeam]   || '',
+          opponent: r[iOpp]    || '',
+          date:     isoDate,
+          time:     r[iTime]   || '',
+          type:     r[iType]   || '',
+          status:   r[iStatus] || '',
+          isPref:   false
+        };
+      })
+      // filter out any that didn’t get a valid YYYY-MM-DD
+      .filter(m => /^\d{4}-\d{2}-\d{2}$/.test(m.date));
 
       // 2) CLOSURES
       const rawClosures = valueRanges[1].values || [];
       const closures = [];
       rawClosures.slice(1).forEach(r => {
-        const from   = new Date(parseDateDMY(r[0]));
-        const to     = new Date(parseDateDMY(r[1]));
-        const reason = (r[2] || '').toLowerCase();
+        const from = new Date(parseDateDMY(r[0]));
+        const to   = new Date(parseDateDMY(r[1]));
+        const reason = (r[2]||'').toLowerCase();
         for (let d = new Date(from); d <= to; d.setDate(d.getDate()+1)) {
           closures.push({ date: d.toISOString().slice(0,10), reason });
         }
@@ -164,9 +160,8 @@
 
       // 3) PREFERENCES
       const rawPrefs = valueRanges[2].values || [];
-      const preferences = [];
       if (rawPrefs.length > 1) {
-        const pHeaders = rawPrefs[0].map(h => h && h.toString().trim().toLowerCase());
+        const pHeaders = rawPrefs[0].map(h => h ? h.toString().trim().toLowerCase() : '');
         const pIdx     = name => pHeaders.indexOf(name.toLowerCase());
         rawPrefs.slice(1).forEach(r => {
           const team     = r[pIdx('team')];
@@ -177,7 +172,6 @@
           const timeFrom = r[pIdx('time from')];
           const timeTo   = r[pIdx('time to')];
           if (!team || !pref || !dateFrom || !dateTo) return;
-
           const isAll = String(allDay).toLowerCase() === 'yes';
           const start = new Date(parseDateDMY(dateFrom));
           const end   = new Date(parseDateDMY(dateTo));
@@ -186,22 +180,14 @@
             const desc = isAll
                        ? `Team ${team} ${pref.toUpperCase()}`
                        : `Team ${team} ${pref.toUpperCase()} from ${timeFrom} to ${timeTo}`;
-            preferences.push({ team, date: iso, description: desc, allDay: isAll });
+            matches.push({
+              team, opponent: '', date: iso,
+              time: isAll ? '' : (desc.match(/from (\d{2}:\d{2})/)||[])[1]||'',
+              type: desc, status: '', isPref: true
+            });
           }
         });
       }
-
-      preferences.forEach(pref => {
-        matches.push({
-          team:     pref.team,
-          opponent: '',
-          date:     pref.date,
-          time:     pref.allDay ? '' : ((pref.description.match(/from (\d{2}:\d{2})/)||[])[1] || ''),
-          type:     pref.description,
-          status:   '',
-          isPref:   true
-        });
-      });
 
       renderCalendar(matches, closures);
     }
@@ -210,7 +196,7 @@
       const container = document.getElementById('calendar-container');
       container.innerHTML = '';
 
-      // index matches by date
+      // index by date
       const byMatch = {};
       matches.forEach(e => {
         byMatch[e.date] = byMatch[e.date] || [];
@@ -218,12 +204,12 @@
         if (!teamColor[e.team]) teamColor[e.team] = getRandomColor();
       });
       Object.values(byMatch).forEach(arr =>
-        arr.sort((a,b)=>a.time.localeCompare(b.time))
+        arr.sort((a,b) => a.time.localeCompare(b.time))
       );
       const byClose = {};
-      closures.forEach(c => { byClose[c.date] = c.reason; });
+      closures.forEach(c => byClose[c.date] = c.reason);
 
-      // month loop
+      // months Sep 2025 → Apr 2026
       const months = [];
       let cur = new Date(2025,8,1), end = new Date(2026,3,1);
       while (cur <= end) {
@@ -253,39 +239,33 @@
           let cell = `<td><strong>${d}</strong>`;
 
           evs.forEach(e => {
-            // determine home/away display
-            let matchup = '';
-            const t = e.type.toLowerCase();
+            // decide home/away
+            let display = '';
             if (!e.isPref && e.opponent) {
-              if (t.includes('home')) {
-                matchup = `${e.team} - ${e.opponent}`;
-              } else if (t.includes('away')) {
-                matchup = `${e.opponent} - ${e.team}`;
-              } else {
-                matchup = `${e.team} vs ${e.opponent}`;
-              }
+              const t = e.type.toLowerCase();
+              if (t.includes('home'))      display = `${e.team} - ${e.opponent}`;
+              else if (t.includes('away')) display = `${e.opponent} - ${e.team}`;
+              else                          display = `${e.team} vs ${e.opponent}`;
             }
-
-            // choose styling based on status
-            const status = e.status.trim().toLowerCase();
+            // style: waiting → border only, else background
             let style = '';
             if (!e.isPref) {
-              if (status === 'waiting') {
+              if (e.status.trim().toLowerCase() === 'waiting') {
                 style = `border:1px solid ${teamColor[e.team]}`;
               } else {
                 style = `background:${teamColor[e.team]}`;
               }
             }
 
-            html += `<div class="${e.isPref ? 'preference' : 'match'}" style="${style}">
-                       ${e.isPref ? '🔹 ' : ''}${e.time}${matchup ? ' – '+matchup : ''}
-                       ${e.status ? `<small class="status">${e.status}</small>` : ''}
+            cell += `<div class="${e.isPref ? 'preference':'match'}" style="${style}">
+                       ${e.isPref?'🔹 ':''}${e.time}${display?' – '+display:''}
+                       ${e.status?`<small class="status">${e.status}</small>`:''}
                        <br><em>(${e.type})</em>
                      </div>`;
           });
 
           if (reason) {
-            const bg = reason==='holiday' ? '#6c757d' : '#000';
+            const bg    = reason==='holiday'? '#6c757d':'#000';
             const label = reason.charAt(0).toUpperCase()+reason.slice(1);
             cell += `<div class="closure" style="background:${bg}">${label}</div>`;
           }
