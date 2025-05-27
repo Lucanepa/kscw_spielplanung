@@ -1,14 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Team Matches Calendar v11</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Team Matches Calendar v12</title>
   <link 
     href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" 
     rel="stylesheet"
-    integrity="sha384-…"
-    crossorigin="anonymous">
+    integrity="sha384-…" crossorigin="anonymous">
   <style>
     body { background: #f8f9fa; padding: 20px; }
     table.calendar { width: 100%; table-layout: fixed; margin-bottom: 40px; }
@@ -21,256 +20,249 @@
       position: relative;
     }
     .calendar th { background: #007bff; color: white; }
-    .match, .preference {
-      display: block;
-      margin: 2px 0;
-      padding: 4px;
-      border-radius: 3px;
-      font-size: 11px;
-      color: black;
-      position: relative;
-      line-height: 1.2;
+    .match, .preference { 
+      display: block; 
+      margin: 2px 0; 
+      padding: 4px; 
+      border-radius: 3px; 
+      font-size: 11px; 
+      position: relative; 
+      line-height: 1.2; 
     }
     .match small.status {
-      position: absolute;
-      top: 2px; right: 4px;
-      color: #555;
-      font-size: 9px;
-    }
-    .closure {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      opacity: 0.8;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
-      color: white;
+      position: absolute; top: 2px; right: 4px;
+      color: #555; font-size: 9px;
     }
     .preference {
-      border: 1px dashed #17a2b8;
-      background: rgba(23,162,184,0.1);
-      font-style: italic;
-      color: #0c5460;
+      border: 1px dashed #dc3545; /* red dashed for absences */
+      color: #721c24;
     }
-    /* ensure small screens wrap */
-    .match div, .preference div { white-space: normal; }
+    .closure {
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%; opacity: 0.8;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; color: white;
+    }
   </style>
 </head>
 <body>
-  <h4>📅 Team Matches Planning v11</h4>
+  <h4>📅 Team Matches Planning v12</h4>
   <button class="btn btn-primary mb-3" onclick="loadData()">🔄 Refresh</button>
   <div id="calendar-container"></div>
 
   <script>
-    // === CONFIG ===
-    const SPREADSHEET_ID = '16hr2bshVSHoQGZ73xGZiJpnhlBwu6Mn3I5YC4Z-ixXY';
-    const API_KEY        = 'AIzaSyB4tX_WxrFRajdEdqVI-yTWV0uRNqJQkfc';
-    const RANGES         = [
-      'Luca - Team_Matches',
-      'Luca - Gym Closed',
-      'Luca - Team_Preferences'
+  // === CONFIG ===
+  const SPREADSHEET_ID = '16hr2bshVSHoQGZ73xGZiJpnhlBwu6Mn3I5YC4Z-ixXY';
+  const API_KEY        = 'AIzaSyB4tX_WxrFRajdEdqVI-yTWV0uRNqJQkfc';
+  const RANGES         = [
+    'Luca - Team_Matches',
+    'Luca - Gym Closed',
+    'Luca - Team_Preferences'
+  ];
+
+  // teams → colors
+  const teamColor = {
+    'Damen 1':'#e74c3c','Damen 2':'#f39c12','Damen 3':'#f1c40f',
+    'Damen 4':'#de16ca','DU23 1':'#16a085','DU23 2':'#2980b9',
+    'Herren 1':'#bd8fe3','Herren 2':'#d35400','Herren 3':'#4cb55c',
+    'HU23':'#7f8c8d'
+  };
+  function getRandomColor(){
+    return '#'+Math.floor(Math.random()*0xFFFFFF)
+      .toString(16).padStart(6,'0');
+  }
+
+  // parse "dd/mm/yyyy" → "YYYY-MM-DD"
+  function parseDateDMY(dmy=''){
+    if(typeof dmy!=='string'||!dmy.includes('/')) return '';
+    const [d,m,y]=dmy.split('/').map(x=>x.trim());
+    if(!d||!m||!y) return '';
+    return `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
+  }
+  // build Date object from "dd/mm/yyyy" correctly in local zone
+  function parseDateObj(dmy=''){
+    if(typeof dmy!=='string'||!dmy.includes('/')) return null;
+    const [d,m,y] = dmy.split('/').map(x=>parseInt(x,10));
+    if(!d||!m||!y) return null;
+    return new Date(y, m-1, d);
+  }
+
+  // the dates to highlight
+  const specialDates = [
+    '2025-09-27',
+    '2025-11-01',
+    '2026-01-31',
+    '2026-03-07'
+  ];
+
+  async function loadData(){
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}`+
+      `/values:batchGet?${RANGES.map(r=>'ranges='+encodeURIComponent(r)).join('&')}`+
+      `&majorDimension=ROWS&key=${API_KEY}`;
+
+    const res = await fetch(url);
+    if(!res.ok){
+      console.error('Sheets API error:',await res.text());
+      return;
+    }
+    const {valueRanges} = await res.json();
+
+    // ─── 1) MATCHES ───────────────────────────
+    const rawMatches = valueRanges[0].values||[];
+    if(rawMatches.length<2){
+      renderCalendar([],[]);
+      return;
+    }
+    const hdr = rawMatches[0].map(h=>h?(h+'').trim().toLowerCase():'');
+    const ix = name=>hdr.indexOf(name.toLowerCase());
+    const [iTeam,iOpp,iDate,iTime,iType,iStatus,iGym] = [
+      ix('team'), ix('opponent team'), ix('date'),
+      ix('time'), ix('type'), ix('status'), ix('gym/halle')
     ];
 
-    const teamColor = {
-      'Damen 1': '#e74c3c',
-      'Damen 2': '#f39c12',
-      'Damen 3': '#f1c40f',
-      'Damen 4': '#de16ca',
-      'DU23 1':  '#16a085',
-      'DU23 2':  '#2980b9',
-      'Herren 1':'#bd8fe3',
-      'Herren 2':'#d35400',
-      'Herren 3':'#4cb55c',
-      'HU23':    '#7f8c8d'
-    };
+    let matches = rawMatches.slice(1).map(r=>{
+      const iso = parseDateDMY(r[iDate]||'');
+      return {
+        team:     r[iTeam]   || '',
+        opponent: r[iOpp]    || '',
+        date:     iso,
+        time:     r[iTime]   || '',
+        type:     r[iType]   || '',
+        status:   r[iStatus] || '',
+        gym:      r[iGym]    || '',
+        isPref:   false
+      };
+    }).filter(m=>/^\d{4}-\d{2}-\d{2}$/.test(m.date));
 
-    function getRandomColor() {
-      return '#' + Math.floor(Math.random() * 0xFFFFFF)
-                      .toString(16).padStart(6, '0');
-    }
-
-    function parseDateDMY(dmy='') {
-      if (typeof dmy !== 'string' || !dmy.includes('/')) return '';
-      const [d,m,y] = dmy.split('/');
-      if (!d||!m||!y) return '';
-      return `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
-    }
-
-    async function loadData() {
-      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}` +
-                  `/values:batchGet?` +
-                  RANGES.map(r => `ranges=${encodeURIComponent(r)}`).join('&') +
-                  `&majorDimension=ROWS&key=${API_KEY}`;
-
-      const res = await fetch(url);
-      if (!res.ok) {
-        console.error('Sheets API error:', await res.text());
-        return;
+    // ─── 2) CLOSURES ─────────────────────────
+    const closures = [];
+    (valueRanges[1].values||[]).slice(1).forEach(r=>{
+      const from = parseDateObj(r[0]), to = parseDateObj(r[1]);
+      if(!from||!to) return;
+      const reason = (r[2]||'').toLowerCase();
+      for(let d=new Date(from); d<=to; d.setDate(d.getDate()+1)){
+        const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        closures.push({ date:key, reason });
       }
-      const { valueRanges } = await res.json();
+    });
 
-      // MATCHES
-      const rawMatches = valueRanges[0].values || [];
-      if (rawMatches.length < 2) {
-        renderCalendar([], []);
-        return;
-      }
-      const headers = rawMatches[0].map(h=>h? h.toString().trim().toLowerCase(): '');
-      const idx     = name=>headers.indexOf(name.toLowerCase());
-      const [iTeam,iOpp,iDate,iTime,iType,iStatus,iGym] = [
-        idx('team'),
-        idx('opponent team'),
-        idx('date'),
-        idx('time'),
-        idx('type'),
-        idx('status'),
-        idx('gym/halle')
-      ];
-      let matches = rawMatches.slice(1).map(r=>{
-        const iso = parseDateDMY(r[iDate]||'');
-        return {
-          team:     r[iTeam]   || '',
-          opponent: r[iOpp]    || '',
-          date:     iso,
-          time:     r[iTime]   || '',
-          type:     r[iType]   || '',
-          status:   r[iStatus] || '',
-          gym:      r[iGym]    || '',
-          isPref:   false
-        };
-      }).filter(m=>/^\d{4}-\d{2}-\d{2}$/.test(m.date));
-
-      // CLOSURES
-      const closures = [];
-      (valueRanges[1].values||[]).slice(1).forEach(r=>{
-        const from = new Date(parseDateDMY(r[0]||'')),
-              to   = new Date(parseDateDMY(r[1]||'')),
-              reason = (r[2]||'').toLowerCase();
-        for(let d=new Date(from); d<=to; d.setDate(d.getDate()+1)){
-          closures.push({ date:d.toISOString().slice(0,10), reason });
+    // ─── 3) PREFERENCES (ABSENCES) ────────────
+    const rawPrefs = valueRanges[2].values||[];
+    if(rawPrefs.length>1){
+      const ph = rawPrefs[0].map(h=>h?(h+'').trim().toLowerCase():'');
+      const pI = name=>ph.indexOf(name.toLowerCase());
+      rawPrefs.slice(1).forEach(r=>{
+        const team = r[pI('team')],
+              reason = r[pI('preference')],
+              allDay = r[pI('all day?')],
+              d0 = r[pI('date from')],
+              d1 = r[pI('date to')];
+        if(!team||!reason||!d0||!d1) return;
+        const start = parseDateObj(d0), end = parseDateObj(d1);
+        const isAll = String(allDay).toLowerCase()==='yes';
+        for(let d=new Date(start); d<=end; d.setDate(d.getDate()+1)){
+          const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+          matches.push({
+            team, opponent:'', date:key,
+            time: isAll?'': (r[pI('time from')]||''),
+            type: reason,
+            status:'', gym:'', isPref:true
+          });
         }
       });
-
-      // PREFERENCES
-      const rawPrefs = valueRanges[2].values||[];
-      if(rawPrefs.length>1){
-        const pH = rawPrefs[0].map(h=>h? h.toString().trim().toLowerCase(): ''),
-              pI = name=>pH.indexOf(name.toLowerCase());
-        rawPrefs.slice(1).forEach(r=>{
-          const team   = r[pI('team')],
-                pref   = r[pI('preference')],
-                allDay = r[pI('all day?')],
-                d0     = r[pI('date from')],
-                d1     = r[pI('date to')],
-                t0     = r[pI('time from')],
-                t1     = r[pI('time to')];
-          if(!team||!pref||!d0||!d1) return;
-          const isAll = String(allDay).toLowerCase()==='yes';
-          const start= new Date(parseDateDMY(d0)),
-                end  = new Date(parseDateDMY(d1));
-          for(let d=new Date(start);d<=end;d.setDate(d.getDate()+1)){
-            const iso = d.toISOString().slice(0,10),
-                  tm  = isAll? '': (t0||'');
-            matches.push({
-              team, opponent:'', date:iso,
-              time: tm,
-              type:`Team ${team} ${pref.toUpperCase()}`+
-                   (isAll? '': ` from ${t0} to ${t1}`),
-              status:'', gym:'', isPref:true
-            });
-          }
-        });
-      }
-
-      renderCalendar(matches, closures);
     }
 
-    function renderCalendar(matches, closures) {
-      const byMatch = {}, byClose = {};
-      matches.forEach(e=>{
-        byMatch[e.date] = byMatch[e.date]||[];
-        byMatch[e.date].push(e);
-        if(e.team && !teamColor[e.team]) teamColor[e.team]=getRandomColor();
-      });
-      Object.values(byMatch).forEach(arr=>
-        arr.sort((a,b)=> (a.time||'').localeCompare(b.time||''))
-      );
-      closures.forEach(c=>byClose[c.date]=c.reason);
+    renderCalendar(matches, closures);
+  }
 
-      const container = document.getElementById('calendar-container');
-      container.innerHTML = '';
-      const months=[], start=new Date(2025,8,1), end=new Date(2026,3,1);
-      for(let d=new Date(start); d<=end; d.setMonth(d.getMonth()+1))
-        months.push(new Date(d));
+  function renderCalendar(matches, closures){
+    const byMatch = {}, byClose={};
+    matches.forEach(e=>{
+      (byMatch[e.date] = byMatch[e.date]||[]).push(e);
+      if(e.team && !teamColor[e.team]) teamColor[e.team]=getRandomColor();
+    });
+    Object.values(byMatch).forEach(arr=>
+      arr.sort((a,b)=> (a.time||'').localeCompare(b.time||''))
+    );
+    closures.forEach(c=>byClose[c.date]=c.reason);
 
-      const weekdays=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    const cont = document.getElementById('calendar-container');
+    cont.innerHTML = '';
+    const months = [];
+    for(let d=new Date(2025,8,1); d<=new Date(2026,3,1); d.setMonth(d.getMonth()+1))
+      months.push(new Date(d));
 
-      months.forEach(dt=>{
-        const y=dt.getFullYear(), m=dt.getMonth(),
-              first=new Date(y,m,1), last=new Date(y,m+1,0),
-              offset=(first.getDay()+6)%7;
-        let html=`<table class="calendar">
-            <thead>
-              <tr><th colspan="7">${first.toLocaleString('en-GB',{month:'long',year:'numeric'})}</th></tr>
-              <tr>${weekdays.map(w=>`<th>${w}</th>`).join('')}</tr>
-            </thead><tbody><tr>`;
-        html += '<td></td>'.repeat(offset);
+    const weekdays=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 
-        for(let d=1; d<=last.getDate(); d++){
-          const key=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`,
-                evs=byMatch[key]||[],
-                reason=byClose[key];
-          let cell=`<td><strong>${d}</strong>`;
+    months.forEach(dt=>{
+      const y=dt.getFullYear(), m=dt.getMonth();
+      const first=new Date(y,m,1), last=new Date(y,m+1,0);
+      const offset=(first.getDay()+6)%7;
+      let html = `<table class="calendar">
+        <thead>
+          <tr><th colspan="7">${first.toLocaleString('en-GB',{month:'long',year:'numeric'})}</th></tr>
+          <tr>${weekdays.map(w=>`<th>${w}</th>`).join('')}</tr>
+        </thead><tbody><tr>`;
+      html += '<td></td>'.repeat(offset);
 
-          evs.forEach(e=>{
+      for(let d=1; d<=last.getDate(); d++){
+        const key = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const evs = byMatch[key]||[], reason=byClose[key];
+        // highlight special
+        const isSpecial = specialDates.includes(key);
+        let cellStyle = isSpecial? 'background:#fff3cd':'';
+        let header = `<strong>${d}</strong>`;
+        if(isSpecial){
+          header += ` <small style="color:#856404">Spielsamstag</small>`;
+        }
+        let cell = `<td style="${cellStyle}">${header}`;
+
+        evs.forEach(e=>{
+          if(e.isPref){
+            // absence: two lines
+            cell += `<div class="preference">🔹 ${e.team}</div>`;
+            cell += `<div class="preference" style="margin-left:8px;"><em>${e.type}</em></div>`;
+          } else {
+            // match: time / team-opponent / gym
             // matchup line
-            let matchLine = '';
+            let mv = e.team;
             const low=e.type.toLowerCase();
             if(e.opponent){
-              if(low.includes('home'))      matchLine = `${e.team} - ${e.opponent}`;
-              else if(low.includes('away')) matchLine = `${e.opponent} - ${e.team}`;
-              else                          matchLine = `${e.team} vs ${e.opponent}`;
-            } else {
-              matchLine = e.team;
+              if(low.includes('home'))      mv=`${e.team} – ${e.opponent}`;
+              else if(low.includes('away')) mv=`${e.opponent} – ${e.team}`;
+              else                          mv=`${e.team} vs ${e.opponent}`;
             }
             // style
-            let style = '';
-            if(!e.isPref && e.team){
-              style = e.status.trim().toLowerCase()==='waiting'
-                ? `border:1px solid ${teamColor[e.team]}`
-                : `background:${teamColor[e.team]}`;
-            }
-            cell += `<div class="${e.isPref?'preference':'match'}" style="${style}">
-                       ${e.isPref? '🔹 ' : ''}
-                       ${e.time   ? `<div>${e.time}</div>` : ''}
-                       ${matchLine? `<div>${matchLine}</div>` : ''}
-                       ${e.gym    ? `<div>${e.gym}</div>` : ''}
-                       ${e.status ? `<small class="status">${e.status}</small>` : ''}
+            const style = e.status.trim().toLowerCase()==='waiting'
+              ? `border:1px solid ${teamColor[e.team]}`
+              : `background:${teamColor[e.team]}`;
+            cell += `<div class="match" style="${style}">
+                       ${e.time? `<div>${e.time}</div>` : ''}
+                       <div>${mv}</div>
+                       ${e.gym? `<div>${e.gym}</div>` : ''}
+                       ${e.status? `<small class="status">${e.status}</small>` : ''}
                      </div>`;
-          });
-
-          if(reason){
-            const bg = reason==='holiday'? '#6c757d':'#000',
-                  label=reason.charAt(0).toUpperCase()+reason.slice(1);
-            cell += `<div class="closure" style="background:${bg}">${label}</div>`;
           }
+        });
 
-          cell += '</td>';
-          html += cell;
-          if((offset + d - 1)%7===6) html += '</tr><tr>';
+        if(reason){
+          const bg = reason==='holiday'? '#6c757d':'#000',
+                txt=reason.charAt(0).toUpperCase()+reason.slice(1);
+          cell += `<div class="closure" style="background:${bg}">${txt}</div>`;
         }
-        // fill trailing cells
-        const trailing = (7 - (offset + last.getDate())%7)%7;
-        html += '<td></td>'.repeat(trailing);
 
-        html += '</tr></tbody></table>';
-        container.insertAdjacentHTML('beforeend', html);
-      });
-    }
+        cell += '</td>';
+        html += cell;
+        if((offset+d-1)%7===6) html += '</tr><tr>';
+      }
+      // trailing empty
+      html += '<td></td>'.repeat((7 - (offset+last.getDate())%7)%7);
+      html += '</tr></tbody></table>';
+      cont.insertAdjacentHTML('beforeend',html);
+    });
+  }
 
-    document.addEventListener('DOMContentLoaded', loadData);
+  document.addEventListener('DOMContentLoaded',loadData);
   </script>
 </body>
 </html>
