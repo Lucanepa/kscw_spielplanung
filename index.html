@@ -51,7 +51,7 @@
   <script>
   // === CONFIG ===
   const SPREADSHEET_ID = '16hr2bshVSHoQGZ73xGZiJpnhlBwu6Mn3I5YC4Z-ixXY';
-  const API_KEY        = 'AIzaSyB4tX_WxrFRajdEdqVI-yTWV0uRNqJQkfc';
+  const API_KEY        = 'AIzaSyB4tX_WxrFRajdEdqVI-yTWV0uRNqJQkfc'; // Replace with your actual API key
   const RANGES         = [
     'Luca - Team_Matches',
     'Luca - Gym Closed',
@@ -69,17 +69,72 @@
       .toString(16).padStart(6,'0');
   }
 
-  function parseDateDMY(dmy=''){
-    if(typeof dmy!=='string'||!dmy.includes('/')) return '';
-    const [d,m,y]=dmy.split('/').map(x=>x.trim());
-    if(!d||!m||!y) return '';
-    return `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
+  // UPDATED Date Parsing function: Converts D/M/Y or D.M.Y string to YYYY-MM-DD string
+  function parseDateDMY(dmyInput = '') {
+    if (typeof dmyInput !== 'string') return '';
+    let dmy = dmyInput.replace(/\./g, '/'); // Normalize dots to slashes
+
+    const parts = dmy.split('/');
+    if (parts.length !== 3) return '';
+
+    let [d_str, m_str, y_str] = parts.map(x => x.trim());
+
+    if (!d_str || !m_str || !y_str) return '';
+
+    const d_num = parseInt(d_str, 10);
+    const m_num = parseInt(m_str, 10);
+    if (isNaN(d_num) || d_num < 1 || d_num > 31) return '';
+    if (isNaN(m_num) || m_num < 1 || m_num > 12) return '';
+    
+    let y_num = parseInt(y_str, 10);
+    if (isNaN(y_num)) return '';
+
+    if (y_str.length === 2) {
+      y_num += 2000; // Assume 20xx for 2-digit years
+    } else if (y_str.length !== 4) {
+      return ''; // Require 2 or 4 digit years
+    }
+    
+    // Optional: More strict year validation (e.g., within a reasonable range)
+    // if (y_num < 1970 || y_num > 2100) return '';
+
+    return `${y_num}-${String(m_num).padStart(2, '0')}-${String(d_num).padStart(2, '0')}`;
   }
-  function parseDateObj(dmy=''){
-    if(typeof dmy!=='string'||!dmy.includes('/')) return null;
-    const [d,m,y]=dmy.split('/').map(n=>parseInt(n,10));
-    if(!d||!m||!y) return null;
-    return new Date(y,m-1,d);
+
+  // UPDATED Date Parsing function: Converts D/M/Y or D.M.Y string to a JS Date object (at noon)
+  function parseDateObj(dmyInput = '') {
+    if (typeof dmyInput !== 'string') return null;
+    let dmy = dmyInput.replace(/\./g, '/'); // Normalize dots to slashes
+
+    const parts = dmy.split('/');
+    if (parts.length !== 3) return null;
+
+    const d_str = parts[0].trim();
+    const m_str = parts[1].trim();
+    const y_str = parts[2].trim();
+
+    if (!d_str || !m_str || !y_str) return null;
+
+    const d = parseInt(d_str, 10);
+    const m = parseInt(m_str, 10);
+    let y = parseInt(y_str, 10);
+
+    if (isNaN(d) || isNaN(m) || isNaN(y)) return null;
+
+    // Handle 2-digit year, assume 20xx
+    if (y_str.length === 2) {
+      y += 2000;
+    } else if (y_str.length !== 4) {
+      return null; // Require 2 or 4 digit year for clarity
+    }
+    
+    // Validate date components (basic sanity check)
+    if (m < 1 || m > 12 || d < 1 || d > 31 || y < 1970 || y > 2100) {
+        return null; 
+    }
+
+    // Create Date object at 12:00:00 local time to avoid DST issues at midnight
+    return new Date(y, m - 1, d, 12, 0, 0); 
   }
 
   async function loadData(){
@@ -87,69 +142,86 @@
       `/values:batchGet?`+RANGES.map(r=>'ranges='+encodeURIComponent(r)).join('&')+
       `&majorDimension=ROWS&key=${API_KEY}`;
 
-    const res=await fetch(url);
-    if(!res.ok){ console.error(await res.text()); return }
-    const {valueRanges}=await res.json();
-
-    // ─── MATCHES ─────────────────────────────
-    const rawMatches = valueRanges[0].values||[];
-    if(rawMatches.length<2){ renderCalendar([],[]); return; }
-    const hdr = rawMatches[0].map(h=>h?(''+h).trim().toLowerCase():'');
-    const ix  = name=>hdr.indexOf(name.toLowerCase());
-    const [iTeam,iOpp,iDate,iTime,iType,iStatus,iGym] = [
-      ix('team'), ix('opponent team'), ix('date'),
-      ix('time'), ix('type'), ix('status'), ix('gym/halle')
-    ];
-
-    let matches = rawMatches.slice(1).map(r=>{
-      const iso = parseDateDMY(r[iDate]||'');
-      return {
-        team:     r[iTeam]   || '',
-        opponent: r[iOpp]    || '',
-        date:     iso,
-        time:     r[iTime]   || '',
-        type:     r[iType]   || '',
-        status:   r[iStatus] || '',
-        gym:      r[iGym]    || '',
-        isPref:   false
-      };
-    }).filter(m=>/^\d{4}-\d{2}-\d{2}$/.test(m.date));
-
-    // ─── CLOSURES ────────────────────────────
-    const closures=[];
-    (valueRanges[1].values||[]).slice(1).forEach(r=>{
-      const from=parseDateObj(r[0]), to=parseDateObj(r[1]);
-      if(!from||!to) return;
-      const reason=(r[2]||'').toLowerCase();
-      for(let d=new Date(from);d<=to;d.setDate(d.getDate()+1)){
-        const key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-        closures.push({date:key,reason});
+    try {
+      const res=await fetch(url);
+      if(!res.ok){ 
+        console.error('Error fetching data from Google Sheets:', res.status, await res.text());
+        alert('Failed to load data from Google Sheets. Check console for details.');
+        return;
       }
-    });
+      const {valueRanges}=await res.json();
 
-    // ─── PREFERENCES (absences) ──────────────
-    const rawPrefs=valueRanges[2].values||[];
-    if(rawPrefs.length>1){
-      const ph=rawPrefs[0].map(h=>h?(''+h).trim().toLowerCase():'');
-      const pI=name=>ph.indexOf(name.toLowerCase());
-      rawPrefs.slice(1).forEach(r=>{
-        const team=r[pI('team')], prio=r[pI('priority')],
-              d0=r[pI('date from')], d1=r[pI('date to')];
-        if(!team||!prio||!d0||!d1) return;
-        const start=parseDateObj(d0), end=parseDateObj(d1);
-        for(let d=new Date(start);d<=end;d.setDate(d.getDate()+1)){
+      // ─── MATCHES ─────────────────────────────
+      const rawMatches = valueRanges[0].values||[];
+      if(rawMatches.length<2){ 
+        console.warn('No match data or header row found.');
+        renderCalendar([],[]); 
+        return; 
+      }
+      const hdr = rawMatches[0].map(h=>h?(''+h).trim().toLowerCase():'');
+      const ix  = name=>hdr.indexOf(name.toLowerCase());
+      const [iTeam,iOpp,iDate,iTime,iType,iStatus,iGym] = [
+        ix('team'), ix('opponent team'), ix('date'),
+        ix('time'), ix('type'), ix('status'), ix('gym/halle')
+      ];
+
+      let matches = rawMatches.slice(1).map(r=>{
+        const iso = parseDateDMY(r[iDate]||'');
+        return {
+          team:     r[iTeam]   || '',
+          opponent: r[iOpp]    || '',
+          date:     iso,
+          time:     r[iTime]   || '',
+          type:     r[iType]   || '',
+          status:   r[iStatus] || '',
+          gym:      r[iGym]    || '',
+          isPref:   false
+        };
+      }).filter(m=>/^\d{4}-\d{2}-\d{2}$/.test(m.date));
+
+      // ─── CLOSURES ────────────────────────────
+      const closures=[];
+      (valueRanges[1].values||[]).slice(1).forEach(r=>{
+        const from=parseDateObj(r[0]), to=parseDateObj(r[1]);
+        if(!from||!to) return;
+        const reason=(r[2]||'').toLowerCase() || 'closed'; // Default reason if empty
+        for(let d=new Date(from);d<=to;d.setDate(d.getDate()+1)){
           const key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-          matches.push({
-            team, opponent:'', date:key,
-            time:'', type:'', status:'',
-            gym:'', isPref:true,
-            priority: prio
-          });
+          closures.push({date:key,reason});
         }
       });
-    }
 
-    renderCalendar(matches,closures);
+      // ─── PREFERENCES (absences) ──────────────
+      const rawPrefs=valueRanges[2].values||[];
+      if(rawPrefs.length>1){
+        const ph=rawPrefs[0].map(h=>h?(''+h).trim().toLowerCase():'');
+        const pI=name=>ph.indexOf(name.toLowerCase());
+        rawPrefs.slice(1).forEach(r=>{
+          const team=r[pI('team')], prio=r[pI('priority')],
+                d0=r[pI('date from')], d1=r[pI('date to')];
+          if(!team||!prio||!d0||!d1) return;
+          const start=parseDateObj(d0), end=parseDateObj(d1);
+          if (!start || !end) { // Check if parsing failed
+            console.warn(`Could not parse preference dates: ${d0} - ${d1} for team ${team}`);
+            return;
+          }
+          for(let d=new Date(start);d<=end;d.setDate(d.getDate()+1)){
+            const key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+            matches.push({
+              team, opponent:'', date:key,
+              time:'', type:'', status:'',
+              gym:'', isPref:true,
+              priority: prio
+            });
+          }
+        });
+      }
+
+      renderCalendar(matches,closures);
+    } catch (error) {
+      console.error('Error in loadData:', error);
+      alert('An error occurred while loading data. Check console for details.');
+    }
   }
 
   function renderCalendar(matches,closures){
@@ -168,14 +240,17 @@
     const cont=document.getElementById('calendar-container');
     cont.innerHTML='';
     const months=[];
-    for(let d=new Date(2025,8,1);d<=new Date(2026,3,1);d.setMonth(d.getMonth()+1))
+    // Calendar range: September 2025 to March 2026. Adjust as needed.
+    // Note: JS months are 0-indexed (0=Jan, 8=Sep, 2=Mar for end date)
+    for(let d=new Date(2025,8,1);d<=new Date(2026,2,1);d.setMonth(d.getMonth()+1)) {
       months.push(new Date(d));
+    }
     const weekdays=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 
     months.forEach(dt=>{
       const y=dt.getFullYear(), m=dt.getMonth();
       const first=new Date(y,m,1), last=new Date(y,m+1,0),
-            offset=(first.getDay()+6)%7;
+            offset=(first.getDay()+6)%7; // 0=Mon, 1=Tue, ..., 6=Sun
       let html=`<table class="calendar">
         <thead>
           <tr><th colspan="7">${first.toLocaleString('en-GB',{month:'long',year:'numeric'})}</th></tr>
@@ -190,14 +265,14 @@
 
         evs.forEach(e=>{
           if(e.isPref){
-            // absence box, same .match style but arrow + Prio
-            const bg=teamColor[e.team];
-            cell+=`<div class="match">
+            // absence box
+            const bg=teamColor[e.team] || '#cccccc'; // Fallback color
+            // Using a simpler display for absences, color can be added via style if needed
+            cell+=`<div class="match" style="background-color: ${bg}; color: white;">
                      🏖️ ${e.team} Prio ${e.priority}
                    </div>`;
           } else {
             // normal match
-            // decide home/away line if opponent exists
             let mv=e.team;
             const low=e.type.toLowerCase();
             if(e.opponent){
@@ -207,31 +282,33 @@
                   ? `${e.opponent} – ${e.team}`
                   : `${e.team} vs ${e.opponent}`;
             }
-            // style: waiting = border, else background
+            const color = teamColor[e.team] || getRandomColor(); // Ensure color exists
             const style=e.status.trim().toLowerCase()==='waiting'
-              ? `border:1px solid ${teamColor[e.team]}`
-              : `background:${teamColor[e.team]}`;
+              ? `border:2px solid ${color}` // Made border thicker for visibility
+              : `background:${color}; color: white;`; // Added white text for colored backgrounds
             cell+=`<div class="match" style="${style}">
                      ${e.time?`<div>${e.time}</div>`:''}
                      <div>${mv}</div>
                      ${e.gym?`<div>${e.gym}</div>`:''}
-                     ${e.status?`<small class="status">${e.status}</small>`:''}
+                     ${e.status?`<small class="status" style="${e.status.trim().toLowerCase()!=='waiting' ? 'color:#eee;' : ''}">${e.status}</small>`:''}
                    </div>`;
           }
         });
 
         if(reason){
-          const bg=reason==='holiday'? '#6c757d':'#000',
-                txt=reason[0].toUpperCase()+reason.slice(1);
+          const bg=reason.toLowerCase().includes('holiday')? '#6c757d':'#343a40'; // Darkened "other" closure
+          const txt=reason[0].toUpperCase()+reason.slice(1);
           cell+=`<div class="closure" style="background:${bg}">${txt}</div>`;
         }
 
         cell+='</td>'; html+=cell;
-        if((offset+d-1)%7===6) html+='</tr><tr>';
+        if((offset+d)%7===0 && d !== last.getDate()) html+='</tr><tr>'; // Corrected condition for new row
       }
-      // trailing
-      html+='<td></td>'.repeat((7-(offset+last.getDate())%7)%7);
-      html+='</tr></tbody></table>';
+      // trailing empty cells
+      if ((offset + last.getDate()) % 7 !== 0) {
+         html+='<td></td>'.repeat(7-((offset+last.getDate())%7));
+      }
+      html+='</tr></tbody></table>'; // Close the last row and table
       cont.insertAdjacentHTML('beforeend',html);
     });
   }
