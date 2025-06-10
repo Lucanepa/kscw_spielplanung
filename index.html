@@ -7,9 +7,22 @@
   <link 
     href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" 
     rel="stylesheet"
-    integrity="sha384-…" crossorigin="anonymous">
+    integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
   <style>
-    body { background: #f8f9fa; padding: 20px; }
+    body { 
+      background: #f8f9fa; 
+    }
+    .controls-header {
+      position: sticky;
+      top: 0;
+      background: #f8f9fa;
+      padding: 15px 20px;
+      border-bottom: 1px solid #dee2e6;
+      z-index: 1000;
+    }
+    .calendar-container {
+      padding: 0 20px 20px 20px;
+    }
     table.calendar { width: 100%; table-layout: fixed; margin-bottom: 40px; }
     .calendar th, .calendar td {
       border: 1px solid #ddd;
@@ -30,6 +43,10 @@
       position: relative;
       line-height: 1.2;
     }
+    .match.absence-entry {
+        border:1px dotted #007bff; 
+        background:transparent;
+    }
     .match small.status {
       position: absolute; top: 2px; right: 4px;
       color: #555; font-size: 9px;
@@ -43,8 +60,28 @@
   </style>
 </head>
 <body>
-  <h4>📅 Team Matches Planning v3</h4>
-  <button class="btn btn-primary mb-3" onclick="loadData()">🔄 Refresh</button>
+  <div class="controls-header">
+    <h4>📅 Team Matches Planning v3</h4>
+    <div class="d-flex flex-wrap align-items-center gap-3 mt-2">
+      <button class="btn btn-primary" onclick="loadData()">🔄 Refresh</button>
+      
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" role="switch" id="show-absences-switch" checked>
+        <label class="form-check-label" for="show-absences-switch">Show Absences</label>
+      </div>
+      
+      <select id="team-filter" class="form-select form-select-sm" style="width: auto;">
+        <option value="all">All Teams</option>
+      </select>
+      
+      <select id="type-filter" class="form-select form-select-sm" style="width: auto;">
+        <option value="all">All Types</option>
+        <option value="home">Home</option>
+        <option value="away">Away</option>
+      </select>
+    </div>
+  </div>
+  
   <div id="calendar-container"></div>
 
   <script>
@@ -76,6 +113,13 @@
       .toString(16).padStart(6,'0');
   }
 
+  // --- UI ELEMENTS ---
+  const showAbsencesSwitch = document.getElementById('show-absences-switch');
+  const teamFilterSelect = document.getElementById('team-filter');
+  const typeFilterSelect = document.getElementById('type-filter');
+
+  let isTeamListPopulated = false;
+
   function parseDateDMY(dmy=''){
     if(typeof dmy!=='string'||!dmy.includes('/')) return '';
     const [d,m,y]=dmy.split('/').map(x=>x.trim());
@@ -90,72 +134,130 @@
   }
 
   async function loadData(){
+    const cont = document.getElementById('calendar-container');
+    cont.innerHTML = '<p class="p-4">Loading data...</p>';
+
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}`+
       `/values:batchGet?`+RANGES.map(r=>'ranges='+encodeURIComponent(r)).join('&')+
       `&majorDimension=ROWS&key=${API_KEY}`;
 
-    const res=await fetch(url);
-    if(!res.ok){ console.error(await res.text()); return }
-    const {valueRanges}=await res.json();
-
-    // ─── MATCHES ─────────────────────────────
-    const rawMatches = valueRanges[0].values||[];
-    if(rawMatches.length<2){ renderCalendar([],[]); return; }
-    const hdr = rawMatches[0].map(h=>h?(''+h).trim().toLowerCase():'');
-    const ix  = name=>hdr.indexOf(name.toLowerCase());
-    const [iTeam,iOpp,iDate,iTime,iType,iStatus,iGym] = [
-      ix('team'), ix('opponent team'), ix('date'),
-      ix('time'), ix('type'), ix('status'), ix('gym/halle')
-    ];
-
-    let matches = rawMatches.slice(1).map(r=>{
-      const iso = parseDateDMY(r[iDate]||'');
-      return {
-        team:     r[iTeam]   || '',
-        opponent: r[iOpp]    || '',
-        date:     iso,
-        time:     r[iTime]   || '',
-        type:     r[iType]   || '',
-        status:   r[iStatus] || '',
-        gym:      r[iGym]    || '',
-        isPref:   false
-      };
-    }).filter(m=>/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(m.date));
-
-    // ─── CLOSURES ────────────────────────────
-    const closures=[];
-    (valueRanges[1].values||[]).slice(1).forEach(r=>{
-      const from=parseDateObj(r[0]), to=parseDateObj(r[1]);
-      if(!from||!to) return;
-      const reason=(r[2]||'').toLowerCase();
-      for(let d=new Date(from);d<=to;d.setDate(d.getDate()+1)){
-        const key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-        closures.push({date:key,reason});
+    try {
+      const res=await fetch(url);
+      if(!res.ok){ 
+        console.error(await res.text()); 
+        cont.innerHTML = `<p class="alert alert-danger m-4">Error loading data from Google Sheets.</p>`;
+        return;
       }
-    });
+      const {valueRanges}=await res.json();
 
-    // ─── PREFERENCES (absences) ──────────────
-    const rawPrefs=valueRanges[2].values||[];
-    if(rawPrefs.length>1){
-      const ph=rawPrefs[0].map(h=>h?(''+h).trim().toLowerCase():'');
-      const pI=name=>ph.indexOf(name.toLowerCase());
-      rawPrefs.slice(1).forEach(r=>{
-        const team=r[pI('team')], prio=r[pI('priority')],
-              d0=r[pI('date from')], d1=r[pI('date to')];
-        if(!team||!prio||!d0||!d1) return;
-        const start=parseDateObj(d0), end=parseDateObj(d1);
-        for(let d=new Date(start);d<=end;d.setDate(d.getDate()+1)){
+      // ─── MATCHES ─────────────────────────────
+      const rawMatches = valueRanges[0].values||[];
+      if(rawMatches.length<2){ renderCalendar([],[]); return; }
+      const hdr = rawMatches[0].map(h=>h?(''+h).trim().toLowerCase():'');
+      const ix  = name=>hdr.indexOf(name.toLowerCase());
+      const [iTeam,iOpp,iDate,iTime,iType,iStatus,iGym] = [
+        ix('team'), ix('opponent team'), ix('date'),
+        ix('time'), ix('type'), ix('status'), ix('gym/halle')
+      ];
+
+      let matches = rawMatches.slice(1).map(r=>{
+        const iso = parseDateDMY(r[iDate]||'');
+        return {
+          team:     r[iTeam]   || '',
+          opponent: r[iOpp]    || '',
+          date:     iso,
+          time:     r[iTime]   || '',
+          type:     (r[iType] || '').toLowerCase(),
+          status:   r[iStatus] || '',
+          gym:      r[iGym]    || '',
+          isPref:   false
+        };
+      }).filter(m=>/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(m.date));
+
+      // ─── CLOSURES ────────────────────────────
+      const closures=[];
+      (valueRanges[1].values||[]).slice(1).forEach(r=>{
+        const from=parseDateObj(r[0]), to=parseDateObj(r[1]);
+        if(!from||!to) return;
+        const reason=(r[2]||'').toLowerCase();
+        for(let d=new Date(from);d<=to;d.setDate(d.getDate()+1)){
           const key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-          matches.push({
-            team, opponent:'', date:key,
-            time:'', type:'', status:'', gym:'', isPref:true, priority: prio
-          });
+          closures.push({date:key,reason});
         }
       });
-    }
 
-    renderCalendar(matches,closures);
+      // ─── PREFERENCES (absences) ──────────────
+      const rawPrefs=valueRanges[2].values||[];
+      if(rawPrefs.length>1){
+        const ph=rawPrefs[0].map(h=>h?(''+h).trim().toLowerCase():'');
+        const pI=name=>ph.indexOf(name.toLowerCase());
+        rawPrefs.slice(1).forEach(r=>{
+          const team=r[pI('team')], prio=r[pI('priority')],
+                d0=r[pI('date from')], d1=r[pI('date to')];
+          if(!team||!prio||!d0||!d1) return;
+          const start=parseDateObj(d0), end=parseDateObj(d1);
+          for(let d=new Date(start);d<=end;d.setDate(d.getDate()+1)){
+            const key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+            matches.push({
+              team, opponent:'', date:key,
+              time:'', type:'absence', status:'', gym:'', isPref:true, priority: prio
+            });
+          }
+        });
+      }
+
+      // Populate team filter dropdown (only once)
+      if (!isTeamListPopulated && matches.length > 0) {
+        const allTeams = [...new Set(matches.map(m => m.team).filter(Boolean))].sort();
+        allTeams.forEach(team => {
+            const option = document.createElement('option');
+            option.value = team;
+            option.textContent = team;
+            teamFilterSelect.appendChild(option);
+        });
+        isTeamListPopulated = true;
+      }
+      
+      renderCalendar(matches,closures);
+    } catch (error) {
+       console.error("Fetch failed:", error);
+       cont.innerHTML = `<p class="alert alert-danger m-4">Could not connect to Google Sheets. Check your network or the API Key.</p>`;
+    }
   }
+
+  function applyFilters() {
+    const showAbsences = showAbsencesSwitch.checked;
+    const selectedTeam = teamFilterSelect.value;
+    const selectedType = typeFilterSelect.value;
+    
+    const allEntries = document.querySelectorAll('.match');
+
+    allEntries.forEach(entry => {
+        const entryTeam = entry.dataset.team;
+        const entryType = entry.dataset.type || '';
+        const isAbsence = entry.classList.contains('absence-entry');
+
+        let isVisible = true;
+
+        // Filter 1: Absences
+        if (!showAbsences && isAbsence) {
+            isVisible = false;
+        }
+
+        // Filter 2: Team
+        if (isVisible && selectedTeam !== 'all' && entryTeam !== selectedTeam) {
+            isVisible = false;
+        }
+
+        // Filter 3: Type (Home/Away) - ignores absences
+        if (isVisible && !isAbsence && selectedType !== 'all' && !entryType.includes(selectedType)) {
+            isVisible = false;
+        }
+
+        entry.classList.toggle('d-none', !isVisible);
+    });
+  }
+
 
   function renderCalendar(matches,closures){
     const byMatch={}, byClose={};
@@ -182,7 +284,6 @@
       for(let d=1; d<=last.getDate(); d++){
         const key=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
         const evs=byMatch[key]||[], reason=byClose[key];
-        // special highlight
         const isSpecial = specialDates.includes(key);
         const cellBg = isSpecial? 'background:#fff9c4;' : '';
         const caption = isSpecial
@@ -191,13 +292,16 @@
         let cell=`<td style="${cellBg}"><strong>${d}</strong>${caption}`;
 
         evs.forEach(e=>{
+          // Add data attributes for filtering
+          const dataAttrs = `data-team="${e.team}" data-type="${e.type}"`;
+          
           if(e.isPref){
-            // dotted blue border for absences
-            cell += `<div class=\"match\" style=\"border:1px dotted #007bff; background:transparent;\">`+
+            // Absence entry
+            cell += `<div class="match absence-entry" ${dataAttrs}>`+
                     `🏖️ ${e.team} Prio ${e.priority}`+
                     `</div>`;
           } else {
-            // normal match
+            // Normal match
             let mv=e.team; const low=e.type.toLowerCase();
             if(e.opponent) mv = low.includes('home')
               ? `${e.team} – ${e.opponent}`
@@ -207,18 +311,18 @@
             const style = e.status.trim().toLowerCase()==='waiting'
               ? `border:1px solid ${teamColor[e.team]}`
               : `background:${teamColor[e.team]}`;
-            cell += `<div class=\"match\" style=\"${style}\">`+
+            cell += `<div class="match" ${dataAttrs} style="${style}">`+
                     `${e.time?`<div>${e.time}</div>`:''}`+
                     `<div>${mv}</div>`+
                     `${e.gym?`<div>${e.gym}</div>`:''}`+
-                    `${e.status?`<small class=\"status\">${e.status}</small>`:''}`+
+                    `${e.status?`<small class="status">${e.status}</small>`:''}`+
                     `</div>`;
           }
         });
 
         if(reason){ const bg=reason==='holiday'? '#6c757d':'#000';
           const txt=reason.charAt(0).toUpperCase()+reason.slice(1);
-          cell += `<div class=\"closure\" style=\"background:${bg}\">${txt}</div>`;
+          cell += `<div class="closure" style="background:${bg}">${txt}</div>`;
         }
 
         cell += '</td>';
@@ -229,9 +333,19 @@
       html += '</tr></tbody></table>';
       cont.insertAdjacentHTML('beforeend', html);
     });
-  }
 
+    // After rendering, apply the current filters
+    applyFilters();
+  }
+  
+  // --- EVENT LISTENERS ---
   document.addEventListener('DOMContentLoaded', loadData);
+  showAbsencesSwitch.addEventListener('change', applyFilters);
+  teamFilterSelect.addEventListener('change', applyFilters);
+  typeFilterSelect.addEventListener('change', applyFilters);
+  
   </script>
 </body>
 </html>
+Use code with caution.
+Html
