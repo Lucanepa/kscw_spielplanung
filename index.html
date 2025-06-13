@@ -112,7 +112,7 @@
     'Herren 1':'#bd8fe3',
     'Herren 2':'#d35400',
     'Herren 3':'#4cb55c',
-    'Herren Legends':'#7e7ef7',
+    'Herren Legends':'#9898fa',
     'HU23':'#3232a8'
   };
   function getRandomColor(){
@@ -125,7 +125,18 @@
   const teamFilterSelect = document.getElementById('team-filter');
   const typeFilterSelect = document.getElementById('type-filter');
 
-  let isTeamListPopulated = false;
+  function populateTeamFilter(matches) {
+  teamFilterSelect.innerHTML = '<option value="all">All Teams</option>';
+  const allTeams = [
+    ...new Set(matches.map(m => m.team).filter(Boolean))
+  ].sort();
+  allTeams.forEach(team => {
+    const opt = document.createElement('option');
+    opt.value = team;
+    opt.textContent = team;
+    teamFilterSelect.appendChild(opt);
+  });
+}
 
   function parseDateDMY(dmy=''){
     if(typeof dmy!=='string'||!dmy.includes('/')) return '';
@@ -142,7 +153,7 @@
 
   async function loadData(){
     const cont = document.getElementById('calendar-container');
-    cont.innerHTML = '<p class="p-4">Loading data...</p>';
+  cont.innerHTML = '<p class="p-4">Loading data...</p>';
 
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}`+
       `/values:batchGet?`+RANGES.map(r=>'ranges='+encodeURIComponent(r)).join('&')+
@@ -213,19 +224,8 @@
         });
       }
 
-      // Populate team filter dropdown (only once)
-      if (!isTeamListPopulated && matches.length > 0) {
-        const allTeams = [...new Set(matches.map(m => m.team).filter(Boolean))].sort();
-        allTeams.forEach(team => {
-            const option = document.createElement('option');
-            option.value = team;
-            option.textContent = team;
-            teamFilterSelect.appendChild(option);
-        });
-        isTeamListPopulated = true;
-      }
-      
-      renderCalendar(matches,closures);
+     populateTeamFilter(matches);
+     renderCalendar(matches, closures);
     } catch (error) {
        console.error("Fetch failed:", error);
        cont.innerHTML = `<p class="alert alert-danger m-4">Could not connect to Google Sheets. Check your network or the API Key.</p>`;
