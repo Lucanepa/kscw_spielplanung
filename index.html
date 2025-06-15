@@ -2,173 +2,355 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>KSC Wiedikon Match Calendar</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Team Matches Calendar v7</title>
   <link 
     href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" 
     rel="stylesheet"
-    integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
-    crossorigin="anonymous">
-  <script src="calendar_data.js"></script>
+    integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
   <style>
-    body { background: #f8f9fa; }
-    .controls-header {
-      position: sticky; top: 0; z-index: 1000;
-      background: #f8f9fa; padding: 15px 20px;
-      border-bottom: 1px solid #dee2e6;
+    body { 
+      background: #f8f9fa; 
     }
-    .calendar-container { padding: 0 20px 20px; }
+    .controls-header {
+      position: sticky;
+      top: 0;
+      background: #f8f9fa;
+      padding: 15px 20px;
+      border-bottom: 1px solid #dee2e6;
+      z-index: 1000;
+    }
+    .calendar-container {
+      padding: 0 20px 20px 20px;
+    }
     table.calendar { width: 100%; table-layout: fixed; margin-bottom: 40px; }
     .calendar th, .calendar td {
-      border: 1px solid #ddd; padding: 5px; height: 100px;
-      font-size: 12px; vertical-align: top;
+      border: 1px solid #ddd;
+      padding: 5px;
+      vertical-align: top;
+      height: 100px;
+      font-size: 12px;
+      position: relative;
     }
-    .calendar th { background: #007bff; color: white; text-align: center; }
+    .calendar th { background: #007bff; color: white; }
     .match {
-      display: block; margin: 2px 0; padding: 4px;
-      border-radius: 3px; font-size: 11px; line-height: 1.2;
+      display: block;
+      margin: 2px 0;
+      padding: 4px;
+      border-radius: 3px;
+      font-size: 11px;
       color: black;
+      position: relative;
+      line-height: 1.2;
+    }
+    .match.absence-entry {
+        border:1px dotted #007bff; 
+        background:transparent;
     }
     .match small.status {
-      font-size: 9px; color: #555; float: right;
+      position: absolute; top: 2px; right: 4px;
+      color: #555; font-size: 9px;
     }
-    .spielsamstag-label {
-      color: #856404; font-size: 11px;
+    .closure {
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%; opacity: 0.8;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; color: white;
     }
   </style>
 </head>
 <body>
-
-<div class="controls-header">
-  <h4>📅 KSC Wiedikon Matches</h4>
-  <div class="d-flex flex-wrap gap-3 mt-2">
-    <select id="team-filter" class="form-select form-select-sm" style="width: auto;">
-      <option value="all">All Teams</option>
-    </select>
-    <select id="type-filter" class="form-select form-select-sm" style="width: auto;">
-      <option value="all">All Types</option>
-      <option value="home">Home</option>
-      <option value="away">Away</option>
-    </select>
+  <div class="controls-header">
+    <h4>📅 Team Matches Planning v7</h4>
+    <div class="d-flex flex-wrap align-items-center gap-3 mt-2">
+      <button class="btn btn-primary" onclick="loadData()">🔄 Refresh</button>
+      
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" role="switch" id="show-absences-switch" checked>
+        <label class="form-check-label" for="show-absences-switch">Show Absences</label>
+      </div>
+      
+      <select id="team-filter" class="form-select form-select-sm" style="width: auto;">
+        <option value="all">All Teams</option>
+      </select>
+      
+      <select id="type-filter" class="form-select form-select-sm" style="width: auto;">
+        <option value="all">All Types</option>
+        <option value="home">Home</option>
+        <option value="away">Away</option>
+      </select>
+    </div>
   </div>
-</div>
+  
+  <div id="calendar-container"></div>
 
-<div id="calendar-container" class="calendar-container"></div>
+  <script>
+  // === CONFIG ===
+  const SPREADSHEET_ID = '16hr2bshVSHoQGZ73xGZiJpnhlBwu6Mn3I5YC4Z-ixXY';
+  const API_KEY        = 'AIzaSyB4tX_WxrFRajdEdqVI-yTWV0uRNqJQkfc';
+  const RANGES         = [
+    'Team_Matches',
+    'Gym Closed',
+    'Team_Preferences'
+  ];
 
-<script>
-  const teamFilter = document.getElementById("team-filter");
-  const typeFilter = document.getElementById("type-filter");
+  // Dates to highlight as Spielsamtstage
+  const specialDates = [
+    '2025-09-27',
+    '2025-11-01',
+    '2026-01-31',
+    '2026-03-07'
+  ];
 
-  const teamColors = {};
-  const specialDates = ["2025-09-27", "2025-11-01", "2026-01-31", "2026-03-07"];
-
-  function getColor(team) {
-    if (!teamColors[team])
-      teamColors[team] = '#' + Math.floor(Math.random() * 0xFFFFFF).toString(16).padStart(6, '0');
-    return teamColors[team];
+  const teamColor = {
+    'Damen 1':'#e74c3c',
+    'Damen 2':'#f39c12',
+    'Damen 3':'#f1c40f',
+    'Damen 4':'#de16ca',
+    'DU23 1':'#16a085',
+    'DU23 2':'#2980b9',
+    'Herren 1':'#bd8fe3',
+    'Herren 2':'#d35400',
+    'Herren 3':'#4cb55c',
+    'Herren Legends':'#9898fa',
+    'HU23':'#d7d7fa'
+  };
+  function getRandomColor(){
+    return '#'+Math.floor(Math.random()*0xFFFFFF)
+      .toString(16).padStart(6,'0');
   }
 
-  function populateTeamFilter(events) {
-    const teams = [...new Set(events.map(e => e.extendedProps.wiedikonTeam))].sort();
-    teams.forEach(team => {
-      const opt = document.createElement('option');
-      opt.value = team;
-      opt.textContent = team;
-      teamFilter.appendChild(opt);
-    });
+  // --- UI ELEMENTS ---
+  const showAbsencesSwitch = document.getElementById('show-absences-switch');
+  const teamFilterSelect = document.getElementById('team-filter');
+  const typeFilterSelect = document.getElementById('type-filter');
+
+  function populateTeamFilter(matches) {
+  teamFilterSelect.innerHTML = '<option value="all">All Teams</option>';
+  const allTeams = [
+    ...new Set(matches.map(m => m.team).filter(Boolean))
+  ].sort();
+  allTeams.forEach(team => {
+    const opt = document.createElement('option');
+    opt.value = team;
+    opt.textContent = team;
+    teamFilterSelect.appendChild(opt);
+  });
+}
+
+  function parseDateDMY(dmy=''){
+    if(typeof dmy!=='string'||!dmy.includes('/')) return '';
+    const [d,m,y]=dmy.split('/').map(x=>x.trim());
+    if(!d||!m||!y) return '';
+    return `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
+  }
+  function parseDateObj(dmy=''){
+    if(typeof dmy!=='string'||!dmy.includes('/')) return null;
+    const [d,m,y]=dmy.split('/').map(n=>parseInt(n,10));
+    if(!d||!m||!y) return null;
+    return new Date(y,m-1,d);
   }
 
-  function renderCalendar(events) {
-    const container = document.getElementById("calendar-container");
-    container.innerHTML = "";
+  async function loadData(){
+    const cont = document.getElementById('calendar-container');
+  cont.innerHTML = '<p class="p-4">Loading data...</p>';
 
-    const byDate = {};
-    events.forEach(e => {
-      const day = e.start.split("T")[0];
-      if (!byDate[day]) byDate[day] = [];
-      byDate[day].push(e);
-    });
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}`+
+      `/values:batchGet?`+RANGES.map(r=>'ranges='+encodeURIComponent(r)).join('&')+
+      `&majorDimension=ROWS&key=${API_KEY}`;
 
-    // 8 months
-    const months = [];
-    for (let m = 8; m <= 15; m++) months.push(new Date(2025, m, 1));
-    const weekdays = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    try {
+      const res=await fetch(url);
+      if(!res.ok){ 
+        console.error(await res.text()); 
+        cont.innerHTML = `<p class="alert alert-danger m-4">Error loading data from Google Sheets.</p>`;
+        return;
+      }
+      const {valueRanges}=await res.json();
 
-    months.forEach(month => {
-      const y = month.getFullYear(), m = month.getMonth();
-      const first = new Date(y, m, 1);
-      const last = new Date(y, m + 1, 0);
-      const offset = (first.getDay() + 6) % 7;
+      // ─── MATCHES ─────────────────────────────
+      const rawMatches = valueRanges[0].values||[];
+      if(rawMatches.length<2){ renderCalendar([],[]); return; }
+      const hdr = rawMatches[0].map(h=>h?(''+h).trim().toLowerCase():'');
+      const ix  = name=>hdr.indexOf(name.toLowerCase());
+      const [iTeam,iOpp,iDate,iTime,iType,iStatus,iGym] = [
+        ix('team'), ix('opponent team'), ix('date'),
+        ix('time'), ix('type'), ix('status'), ix('gym/halle')
+      ];
 
-      let html = `<table class="calendar"><thead>
-        <tr><th colspan="7">${first.toLocaleString("en-GB", { month: "long", year: "numeric" })}</th></tr>
-        <tr>${weekdays.map(d => `<th>${d}</th>`).join('')}</tr>
-        </thead><tbody><tr>`;
+      let matches = rawMatches.slice(1).map(r=>{
+        const iso = parseDateDMY(r[iDate]||'');
+        return {
+          team:     r[iTeam]   || '',
+          opponent: r[iOpp]    || '',
+          date:     iso,
+          time:     r[iTime]   || '',
+          type:     (r[iType] || '').toLowerCase(),
+          status:   r[iStatus] || '',
+          gym:      r[iGym]    || '',
+          isPref:   false
+        };
+      }).filter(m=>/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(m.date));
 
-      html += '<td></td>'.repeat(offset);
+      // ─── CLOSURES ────────────────────────────
+      const closures=[];
+      (valueRanges[1].values||[]).slice(1).forEach(r=>{
+        const from=parseDateObj(r[0]), to=parseDateObj(r[1]);
+        if(!from||!to) return;
+        const reason=(r[2]||'').toLowerCase();
+        for(let d=new Date(from);d<=to;d.setDate(d.getDate()+1)){
+          const key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+          closures.push({date:key,reason});
+        }
+      });
 
-      for (let d = 1; d <= last.getDate(); d++) {
-        const dayStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-        const isSpecial = specialDates.includes(dayStr);
-        const matches = byDate[dayStr] || [];
-
-        let cell = `<td><strong>${d}</strong>${isSpecial ? `<div class="spielsamstag-label">Spielsamstag</div>` : ''}`;
-        matches.forEach(match => {
-          const team = match.extendedProps.wiedikonTeam;
-          const type = match.extendedProps.homeaway.toLowerCase();
-          const status = match.extendedProps.status;
-          const gym = match.extendedProps.gym;
-          const color = match.className.includes("confirmed-event")
-                        ? getColor(team)
-                        : "transparent";
-          const border = match.className.includes("open-event")
-                         ? `border: 1px solid ${getColor(team)}`
-                         : "";
-          if (match.start.startsWith("2025-09-15")) return; // 🚫 placeholder
-
-          const text = `${match.title}<br>${gym || ''}`;
-          const htmlMatch = `<div class="match" 
-            data-team="${team}" 
-            data-type="${type}" 
-            style="background:${color};${border}">
-              ${match.start.slice(11,16)}<br>${text}
-              ${status ? `<small class="status">${status}</small>` : ""}
-            </div>`;
-          cell += htmlMatch;
+      // ─── PREFERENCES (absences) ──────────────
+      const rawPrefs=valueRanges[2].values||[];
+      if(rawPrefs.length>1){
+        const ph=rawPrefs[0].map(h=>h?(''+h).trim().toLowerCase():'');
+        const pI=name=>ph.indexOf(name.toLowerCase());
+        rawPrefs.slice(1).forEach(r=>{
+          const team=r[pI('team')], prio=r[pI('priority')],
+                d0=r[pI('date from')], d1=r[pI('date to')];
+          if(!team||!prio||!d0||!d1) return;
+          const start=parseDateObj(d0), end=parseDateObj(d1);
+          for(let d=new Date(start);d<=end;d.setDate(d.getDate()+1)){
+            const key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+            matches.push({
+              team, opponent:'', date:key,
+              time:'', type:'absence', status:'', gym:'', isPref:true, priority: prio
+            });
+          }
         });
-
-        cell += '</td>';
-        html += cell;
-        if ((offset + d - 1) % 7 === 6) html += '</tr><tr>';
       }
 
-      html += '</tr></tbody></table>';
-      container.insertAdjacentHTML("beforeend", html);
-    });
-
-    applyFilters();
+     populateTeamFilter(matches);
+     renderCalendar(matches, closures);
+    } catch (error) {
+       console.error("Fetch failed:", error);
+       cont.innerHTML = `<p class="alert alert-danger m-4">Could not connect to Google Sheets. Check your network or the API Key.</p>`;
+    }
   }
 
   function applyFilters() {
-    const selectedTeam = teamFilter.value;
-    const selectedType = typeFilter.value;
-    document.querySelectorAll(".match").forEach(m => {
-      const team = m.dataset.team;
-      const type = m.dataset.type;
-      let show = true;
-      if (selectedTeam !== "all" && team !== selectedTeam) show = false;
-      if (selectedType !== "all" && type !== selectedType) show = false;
-      m.classList.toggle("d-none", !show);
+    const showAbsences = showAbsencesSwitch.checked;
+    const selectedTeam = teamFilterSelect.value;
+    const selectedType = typeFilterSelect.value;
+    
+    const allEntries = document.querySelectorAll('.match');
+
+    allEntries.forEach(entry => {
+        const entryTeam = entry.dataset.team;
+        const entryType = entry.dataset.type || '';
+        const isAbsence = entry.classList.contains('absence-entry');
+
+        let isVisible = true;
+
+        // Filter 1: Absences
+        if (!showAbsences && isAbsence) {
+            isVisible = false;
+        }
+
+        // Filter 2: Team
+        if (isVisible && selectedTeam !== 'all' && entryTeam !== selectedTeam) {
+            isVisible = false;
+        }
+
+        // Filter 3: Type (Home/Away) - ignores absences
+        if (isVisible && !isAbsence && selectedType !== 'all' && !entryType.includes(selectedType)) {
+            isVisible = false;
+        }
+
+        entry.classList.toggle('d-none', !isVisible);
     });
   }
 
-  document.addEventListener("DOMContentLoaded", () => {
-    populateTeamFilter(calendarEvents);
-    renderCalendar(calendarEvents);
-  });
 
-  teamFilter.addEventListener("change", applyFilters);
-  typeFilter.addEventListener("change", applyFilters);
-</script>
+  function renderCalendar(matches,closures){
+    const byMatch={}, byClose={};
+    matches.forEach(e=>{
+      (byMatch[e.date]=byMatch[e.date]||[]).push(e);
+      if(e.team&&!teamColor[e.team]) teamColor[e.team]=getRandomColor();
+    });
+    Object.values(byMatch).forEach(arr=> arr.sort((a,b)=>(a.time||'').localeCompare(b.time||'')));
+    closures.forEach(c=>byClose[c.date]=c.reason);
+
+    const cont=document.getElementById('calendar-container'); cont.innerHTML='';
+    const months=[];
+    for(let d=new Date(2025,8,1);d<=new Date(2026,3,1);d.setMonth(d.getMonth()+1)) months.push(new Date(d));
+    const weekdays=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+    months.forEach(dt=>{
+      const y=dt.getFullYear(), m=dt.getMonth();
+      const first=new Date(y,m,1), last=new Date(y,m+1,0), offset=(first.getDay()+6)%7;
+      let html=`<table class="calendar"><thead>`+
+               `<tr><th colspan="7">${first.toLocaleString('en-GB',{month:'long',year:'numeric'})}</th></tr>`+
+               `<tr>${weekdays.map(w=>`<th>${w}</th>`).join('')}</tr></thead><tbody><tr>`;
+      html += '<td></td>'.repeat(offset);
+
+      for(let d=1; d<=last.getDate(); d++){
+        const key=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const evs=byMatch[key]||[], reason=byClose[key];
+        const isSpecial = specialDates.includes(key);
+        const cellBg = isSpecial? 'background:#fff9c4;' : '';
+        const caption = isSpecial
+          ? ` <small style="color:#856404">Spielsamstag</small>`
+          : '';
+        let cell=`<td style="${cellBg}"><strong>${d}</strong>${caption}`;
+
+        evs.forEach(e=>{
+          // Add data attributes for filtering
+          const dataAttrs = `data-team="${e.team}" data-type="${e.type}"`;
+          
+          if(e.isPref){
+            // Absence entry
+            cell += `<div class="match absence-entry" ${dataAttrs}>`+
+                    `🏖️ ${e.team} Prio ${e.priority}`+
+                    `</div>`;
+          } else {
+            // Normal match
+            let mv=e.team; const low=e.type.toLowerCase();
+            if(e.opponent) mv = low.includes('home')
+              ? `${e.team} – ${e.opponent}`
+              : low.includes('away')
+                ? `${e.opponent} – ${e.team}`
+                : `${e.team} vs ${e.opponent}`;
+            const style = e.status.trim().toLowerCase()==='waiting'
+              ? `border:1px solid ${teamColor[e.team]}`
+              : `background:${teamColor[e.team]}`;
+            cell += `<div class="match" ${dataAttrs} style="${style}">`+
+                    `${e.time?`<div>${e.time}</div>`:''}`+
+                    `<div>${mv}</div>`+
+                    `${e.gym?`<div>${e.gym}</div>`:''}`+
+                    `${e.status?`<small class="status">${e.status}</small>`:''}`+
+                    `</div>`;
+          }
+        });
+
+        if(reason){ const bg=reason==='holiday'? '#6c757d':'#000';
+          const txt=reason.charAt(0).toUpperCase()+reason.slice(1);
+          cell += `<div class="closure" style="background:${bg}">${txt}</div>`;
+        }
+
+        cell += '</td>';
+        html += cell;
+        if((offset + d - 1) % 7 === 6) html += '</tr><tr>';
+      }
+      html += '<td></td>'.repeat((7-(offset+last.getDate())%7)%7);
+      html += '</tr></tbody></table>';
+      cont.insertAdjacentHTML('beforeend', html);
+    });
+
+    // After rendering, apply the current filters
+    applyFilters();
+  }
+  
+  // --- EVENT LISTENERS ---
+  document.addEventListener('DOMContentLoaded', loadData);
+  showAbsencesSwitch.addEventListener('change', applyFilters);
+  teamFilterSelect.addEventListener('change', applyFilters);
+  typeFilterSelect.addEventListener('change', applyFilters);
+  
+  </script>
 </body>
 </html>
