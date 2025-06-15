@@ -25,7 +25,7 @@
     }
     .calendar th { background: #007bff; color: white; text-align: center; }
     .match {
-      display: block; margin: 2px 0; padding: 4px;
+      display: block; margin: 2px 0; padding: 2px;
       border-radius: 3px; font-size: 11px; line-height: 1.2;
       color: black;
     }
@@ -39,11 +39,10 @@
 </head>
 <body>
 
-<div class="controls-header">
-  <h4>
-    📅 KSC Wiedikon Matches
-    <small id="last-updated" class="text-muted" style="font-size: 0.8em;"></small>
-  </h4>
+<div class="d-flex align-items-center justify-content-between flex-wrap">
+  <h4 class="m-0">📅 KSC Wiedikon Matches</h4>
+  <div id="last-updated" class="text-muted" style="font-size: 0.9em;"></div>
+</div>
   <div class="d-flex flex-wrap gap-3 mt-2">
     <select id="team-filter" class="form-select form-select-sm" style="width: auto;">
       <option value="all">All Teams</option>
@@ -130,16 +129,16 @@
           const color = match.className.includes("confirmed-event") ? getColor(team) : "transparent";
           const border = match.className.includes("open-event") ? `border: 1px solid ${getColor(team)}` : "";
 
-          cell += `<div class="match" 
-            data-team="${team}" 
-            data-type="${type}" 
-            style="background:${color};${border}">
-            ${match.start.slice(11,16)}<br>
-            ${match.title}<br>
-            <small>${league} • ${type?.charAt(0).toUpperCase() + type?.slice(1)}</small><br>
-            ${gym ? `${gym}<br>` : ''}
-            ${status ? `<small class="status">${status}</small>` : ''}
-          </div>`;
+         cell += `<div class="match" 
+        data-team="${team}" 
+        data-type="${type}" 
+        style="background:${color};${border}">
+        <div><strong>${match.start.slice(11,16)}</strong> • ${type?.charAt(0).toUpperCase() + type?.slice(1)}</div>
+        <div>${match.title}</div>
+        <div style="font-size: 11px; margin-top: 2px;">${league}</div>
+        ${gym ? `<div>${gym}</div>` : ''}
+        ${status ? `<div style="font-size: 10px; color: #444;">${status}</div>` : ''}
+      </div>`;
         });
 
         cell += '</td>';
@@ -169,11 +168,15 @@
 
   document.addEventListener("DOMContentLoaded", () => {
     // 🕒 Display formatted last update
-    if (typeof last_updated_at === "string") {
-      const stamp = document.getElementById("last-updated");
-      const formatted = new Date(last_updated_at).toLocaleDateString("en-GB");
-      stamp.textContent = `– last update as of ${formatted}`;
-    }
+    const stamp = document.getElementById("last-updated");
+const allDates = calendarEvents
+  .map(e => new Date(e.last_updated_at))
+  .filter(d => !isNaN(d));
+if (allDates.length) {
+  const latest = new Date(Math.max(...allDates));
+  const formatted = latest.toLocaleDateString("en-GB");
+  stamp.textContent = `Last updated as of ${formatted}`;
+}
 
     populateTeamFilter(calendarEvents);
     renderCalendar(calendarEvents);
