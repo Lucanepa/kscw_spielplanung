@@ -6,6 +6,7 @@ const calendarEvents = [
       "open-event",
       "spielsamstag"
     ],
+    "last_updated_at": "2025-06-15T12:38:25",
     "extendedProps": {
       "group": "Herren 2. Liga",
       "gym": "Kantonsschule Wiedikon C",
@@ -21,6 +22,7 @@ const calendarEvents = [
       "open-event",
       "spielsamstag"
     ],
+    "last_updated_at": "2025-06-15T12:38:25",
     "extendedProps": {
       "group": "Frauen 3. Liga Gruppe B",
       "gym": "Kantonsschule Wiedikon (Halle B)",
@@ -35,6 +37,7 @@ const calendarEvents = [
     "className": [
       "open-event"
     ],
+    "last_updated_at": "2025-06-15T12:38:25",
     "extendedProps": {
       "group": "Herren 3. Liga Gruppe A",
       "gym": "Kantonsschule Wiedikon (Halle B)",
@@ -49,6 +52,7 @@ const calendarEvents = [
     "className": [
       "open-event"
     ],
+    "last_updated_at": "2025-06-15T12:38:25",
     "extendedProps": {
       "group": "Herren 3. Liga Gruppe A",
       "gym": "Kantonsschule Wiedikon (Halle A)",
@@ -64,6 +68,7 @@ const calendarEvents = [
       "open-event",
       "spielsamstag"
     ],
+    "last_updated_at": "2025-06-15T12:38:25",
     "extendedProps": {
       "group": "Herren 3. Liga Gruppe A",
       "gym": "Kantonsschule Wiedikon (Halle B)",
@@ -78,6 +83,7 @@ const calendarEvents = [
     "className": [
       "confirmed-event"
     ],
+    "last_updated_at": "2025-06-15T12:38:25",
     "extendedProps": {
       "group": "Herren 3. Liga Gruppe B",
       "gym": "Krämeracker 1-2",
@@ -92,6 +98,7 @@ const calendarEvents = [
     "className": [
       "open-event"
     ],
+    "last_updated_at": "2025-06-15T12:38:25",
     "extendedProps": {
       "group": "Herren 3. Liga Gruppe B",
       "gym": "Kantonsschule Wiedikon (Halle A)",
@@ -106,6 +113,7 @@ const calendarEvents = [
     "className": [
       "open-event"
     ],
+    "last_updated_at": "2025-06-15T12:38:25",
     "extendedProps": {
       "group": "Herren 3. Liga Gruppe B",
       "gym": "Kantonsschule Wiedikon (Halle A)",
@@ -120,6 +128,7 @@ const calendarEvents = [
     "className": [
       "open-event"
     ],
+    "last_updated_at": "2025-06-15T12:38:25",
     "extendedProps": {
       "group": "Herren 3. Liga Gruppe B",
       "gym": "Sporthalle Elba",
@@ -134,6 +143,7 @@ const calendarEvents = [
     "className": [
       "open-event"
     ],
+    "last_updated_at": "2025-06-15T12:38:25",
     "extendedProps": {
       "group": "Herren 3. Liga Gruppe B",
       "gym": "Kantonsschule Wiedikon (Halle A)",
@@ -148,6 +158,7 @@ const calendarEvents = [
     "className": [
       "open-event"
     ],
+    "last_updated_at": "2025-06-15T12:38:25",
     "extendedProps": {
       "group": "Herren 3. Liga Gruppe B",
       "gym": "Kantonsschule Wiedikon (Halle A)",
@@ -162,6 +173,7 @@ const calendarEvents = [
     "className": [
       "open-event"
     ],
+    "last_updated_at": "2025-06-15T12:38:25",
     "extendedProps": {
       "group": "Herren 3. Liga Gruppe B",
       "gym": "Kantonsschule Wiedikon (Halle A)",
@@ -176,6 +188,7 @@ const calendarEvents = [
     "className": [
       "open-event"
     ],
+    "last_updated_at": "2025-06-15T12:38:25",
     "extendedProps": {
       "group": "Herren 3. Liga Gruppe B",
       "gym": "Kantonsschule Wiedikon (Halle A)",
@@ -190,6 +203,7 @@ const calendarEvents = [
     "className": [
       "open-event"
     ],
+    "last_updated_at": "2025-06-15T12:38:25",
     "extendedProps": {
       "group": "Frauen 5. Liga Gruppe A",
       "gym": "Kantonsschule Wiedikon (Halle A)",
@@ -205,6 +219,7 @@ const calendarEvents = [
       "open-event",
       "spielsamstag"
     ],
+    "last_updated_at": "2025-06-15T12:38:25",
     "extendedProps": {
       "group": "Frauen 5. Liga Gruppe A",
       "gym": "Kantonsschule Wiedikon (Halle B)",
@@ -220,6 +235,7 @@ const calendarEvents = [
       "open-event",
       "spielsamstag"
     ],
+    "last_updated_at": "2025-06-15T12:38:25",
     "extendedProps": {
       "group": "Frauen 5. Liga Gruppe A",
       "gym": "Kantonsschule Wiedikon (Halle B)",
@@ -235,6 +251,7 @@ const calendarEvents = [
       "open-event",
       "spielsamstag"
     ],
+    "last_updated_at": "2025-06-15T12:38:25",
     "extendedProps": {
       "group": "Frauen 5. Liga Gruppe B",
       "gym": "Kantonsschule Wiedikon (Halle A)",
@@ -249,6 +266,7 @@ const calendarEvents = [
     "className": [
       "open-event"
     ],
+    "last_updated_at": "2025-06-15T12:38:25",
     "extendedProps": {
       "group": "Frauen U23 2. Liga",
       "gym": NaN,
@@ -263,6 +281,7 @@ const calendarEvents = [
     "className": [
       "open-event"
     ],
+    "last_updated_at": "2025-06-15T12:38:25",
     "extendedProps": {
       "group": "Frauen U23 2. Liga",
       "gym": NaN,
@@ -277,6 +296,7 @@ const calendarEvents = [
     "className": [
       "open-event"
     ],
+    "last_updated_at": "2025-06-15T12:38:25",
     "extendedProps": {
       "group": "Frauen U23 2. Liga",
       "gym": "Gulliver 1 und 2",
@@ -291,6 +311,7 @@ const calendarEvents = [
     "className": [
       "open-event"
     ],
+    "last_updated_at": "2025-06-15T12:38:25",
     "extendedProps": {
       "group": "Frauen U23 2. Liga",
       "gym": NaN,
@@ -305,6 +326,7 @@ const calendarEvents = [
     "className": [
       "open-event"
     ],
+    "last_updated_at": "2025-06-15T12:38:25",
     "extendedProps": {
       "group": "Frauen U23 2. Liga",
       "gym": NaN,
@@ -319,6 +341,7 @@ const calendarEvents = [
     "className": [
       "open-event"
     ],
+    "last_updated_at": "2025-06-15T12:38:25",
     "extendedProps": {
       "group": "Frauen U23 2. Liga",
       "gym": NaN,
@@ -333,6 +356,7 @@ const calendarEvents = [
     "className": [
       "open-event"
     ],
+    "last_updated_at": "2025-06-15T12:38:25",
     "extendedProps": {
       "group": "Frauen U23 2. Liga",
       "gym": NaN,
@@ -347,6 +371,7 @@ const calendarEvents = [
     "className": [
       "open-event"
     ],
+    "last_updated_at": "2025-06-15T12:38:25",
     "extendedProps": {
       "group": "Frauen U23 2. Liga",
       "gym": NaN,
@@ -361,6 +386,7 @@ const calendarEvents = [
     "className": [
       "open-event"
     ],
+    "last_updated_at": "2025-06-15T12:38:25",
     "extendedProps": {
       "group": "Frauen U23 2. Liga",
       "gym": NaN,
@@ -375,6 +401,7 @@ const calendarEvents = [
     "className": [
       "open-event"
     ],
+    "last_updated_at": "2025-06-15T12:38:25",
     "extendedProps": {
       "group": "Frauen U23 2. Liga",
       "gym": "Schlossächer",
@@ -389,6 +416,7 @@ const calendarEvents = [
     "className": [
       "open-event"
     ],
+    "last_updated_at": "2025-06-15T12:38:25",
     "extendedProps": {
       "group": "Frauen U23 2. Liga",
       "gym": NaN,
@@ -403,6 +431,7 @@ const calendarEvents = [
     "className": [
       "open-event"
     ],
+    "last_updated_at": "2025-06-15T12:38:25",
     "extendedProps": {
       "group": "Frauen U23 2. Liga",
       "gym": NaN,
@@ -417,6 +446,7 @@ const calendarEvents = [
     "className": [
       "open-event"
     ],
+    "last_updated_at": "2025-06-15T12:38:25",
     "extendedProps": {
       "group": "Frauen U23 2. Liga",
       "gym": NaN,
@@ -431,6 +461,7 @@ const calendarEvents = [
     "className": [
       "open-event"
     ],
+    "last_updated_at": "2025-06-15T12:38:25",
     "extendedProps": {
       "group": "Frauen U23 2. Liga",
       "gym": NaN,
@@ -445,6 +476,7 @@ const calendarEvents = [
     "className": [
       "open-event"
     ],
+    "last_updated_at": "2025-06-15T12:38:25",
     "extendedProps": {
       "group": "Frauen U23 2. Liga",
       "gym": NaN,
@@ -459,6 +491,7 @@ const calendarEvents = [
     "className": [
       "open-event"
     ],
+    "last_updated_at": "2025-06-15T12:38:25",
     "extendedProps": {
       "group": "Frauen U23 1. Liga",
       "gym": NaN,
@@ -473,6 +506,7 @@ const calendarEvents = [
     "className": [
       "open-event"
     ],
+    "last_updated_at": "2025-06-15T12:38:25",
     "extendedProps": {
       "group": "Frauen U23 1. Liga",
       "gym": NaN,
@@ -487,6 +521,7 @@ const calendarEvents = [
     "className": [
       "open-event"
     ],
+    "last_updated_at": "2025-06-15T12:38:25",
     "extendedProps": {
       "group": "Frauen U23 1. Liga",
       "gym": "Zwingert",
@@ -501,6 +536,7 @@ const calendarEvents = [
     "className": [
       "open-event"
     ],
+    "last_updated_at": "2025-06-15T12:38:25",
     "extendedProps": {
       "group": "Frauen U23 1. Liga",
       "gym": NaN,
@@ -515,6 +551,7 @@ const calendarEvents = [
     "className": [
       "open-event"
     ],
+    "last_updated_at": "2025-06-15T12:38:25",
     "extendedProps": {
       "group": "Frauen U23 1. Liga",
       "gym": "Krämeracker 1-2",
@@ -529,6 +566,7 @@ const calendarEvents = [
     "className": [
       "open-event"
     ],
+    "last_updated_at": "2025-06-15T12:38:25",
     "extendedProps": {
       "group": "Frauen U23 1. Liga",
       "gym": NaN,
@@ -543,6 +581,7 @@ const calendarEvents = [
     "className": [
       "open-event"
     ],
+    "last_updated_at": "2025-06-15T12:38:25",
     "extendedProps": {
       "group": "Frauen U23 1. Liga",
       "gym": NaN,
@@ -557,6 +596,7 @@ const calendarEvents = [
     "className": [
       "open-event"
     ],
+    "last_updated_at": "2025-06-15T12:38:25",
     "extendedProps": {
       "group": "Frauen U23 1. Liga",
       "gym": NaN,
@@ -571,6 +611,7 @@ const calendarEvents = [
     "className": [
       "open-event"
     ],
+    "last_updated_at": "2025-06-15T12:38:25",
     "extendedProps": {
       "group": "Frauen U23 1. Liga",
       "gym": "Im Birch",
@@ -585,6 +626,7 @@ const calendarEvents = [
     "className": [
       "open-event"
     ],
+    "last_updated_at": "2025-06-15T12:38:25",
     "extendedProps": {
       "group": "Frauen U23 1. Liga",
       "gym": NaN,
@@ -599,6 +641,7 @@ const calendarEvents = [
     "className": [
       "open-event"
     ],
+    "last_updated_at": "2025-06-15T12:38:25",
     "extendedProps": {
       "group": "Frauen U23 1. Liga",
       "gym": "Kaserne",
@@ -613,6 +656,7 @@ const calendarEvents = [
     "className": [
       "open-event"
     ],
+    "last_updated_at": "2025-06-15T12:38:25",
     "extendedProps": {
       "group": "Frauen U23 1. Liga",
       "gym": NaN,
@@ -627,6 +671,7 @@ const calendarEvents = [
     "className": [
       "open-event"
     ],
+    "last_updated_at": "2025-06-15T12:38:25",
     "extendedProps": {
       "group": "Frauen U23 1. Liga",
       "gym": NaN,
@@ -641,6 +686,7 @@ const calendarEvents = [
     "className": [
       "open-event"
     ],
+    "last_updated_at": "2025-06-15T12:38:25",
     "extendedProps": {
       "group": "Frauen U23 1. Liga",
       "gym": NaN,
@@ -655,6 +701,7 @@ const calendarEvents = [
     "className": [
       "open-event"
     ],
+    "last_updated_at": "2025-06-15T12:38:25",
     "extendedProps": {
       "group": "Frauen U23 1. Liga",
       "gym": NaN,
@@ -670,6 +717,7 @@ const calendarEvents = [
       "open-event",
       "spielsamstag"
     ],
+    "last_updated_at": "2025-06-15T12:38:25",
     "extendedProps": {
       "group": "Frauen U23 1. Liga",
       "gym": "Kantonsschule Wiedikon (Halle A)",
@@ -685,6 +733,7 @@ const calendarEvents = [
       "open-event",
       "spielsamstag"
     ],
+    "last_updated_at": "2025-06-15T12:38:25",
     "extendedProps": {
       "group": "Männer U23 Gruppe A",
       "gym": "Kantonsschule Wiedikon C",
@@ -699,6 +748,7 @@ const calendarEvents = [
     "className": [
       "open-event"
     ],
+    "last_updated_at": "2025-06-15T12:38:25",
     "extendedProps": {
       "group": "Männer U23 Gruppe A",
       "gym": "Kantonsschule Wiedikon C",
@@ -714,6 +764,7 @@ const calendarEvents = [
       "open-event",
       "spielsamstag"
     ],
+    "last_updated_at": "2025-06-15T12:38:25",
     "extendedProps": {
       "group": "Männer U23 Gruppe A",
       "gym": "Kantonsschule Wiedikon C",
@@ -729,6 +780,7 @@ const calendarEvents = [
       "open-event",
       "spielsamstag"
     ],
+    "last_updated_at": "2025-06-15T12:38:25",
     "extendedProps": {
       "group": "Männer U23 Gruppe A",
       "gym": "Kantonsschule Wiedikon (Halle B)",
