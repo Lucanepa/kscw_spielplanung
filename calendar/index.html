@@ -1,0 +1,11 @@
+<script src="calendar_data.js"></script>
+const calendar = new FullCalendar.Calendar(document.getElementById("calendar"), {
+  initialView: "dayGridMonth",
+  events: calendarEvents,
+  eventDidMount: function(info) {
+    if (info.event.classNames.includes("spielsamstag")) {
+      info.el.innerHTML += "<br><b>Spielsamstag</b>";
+    }
+  }
+});
+calendar.render();
