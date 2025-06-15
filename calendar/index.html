@@ -40,7 +40,10 @@
 <body>
 
 <div class="controls-header">
-  <h4>📅 KSC Wiedikon Matches</h4>
+  <h4>
+    📅 KSC Wiedikon Matches
+    <small id="last-updated" class="text-muted" style="font-size: 0.8em;"></small>
+  </h4>
   <div class="d-flex flex-wrap gap-3 mt-2">
     <select id="team-filter" class="form-select form-select-sm" style="width: auto;">
       <option value="all">All Teams</option>
@@ -89,7 +92,6 @@
       byDate[day].push(e);
     });
 
-    // 8 month
     const months = [];
     for (let m = 8; m <= 14; m++) months.push(new Date(2025, m, 1));
     const weekdays = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
@@ -112,29 +114,32 @@
         const isSpecial = specialDates.includes(dayStr);
         const matches = byDate[dayStr] || [];
 
-        let cell = `<td><strong>${d}</strong>${isSpecial ? `<div class="spielsamstag-label">Spielsamstag</div>` : ''}`;
-        matches.forEach(match => {
-          const team = match.extendedProps.wiedikonTeam;
-          const type = match.extendedProps.homeaway.toLowerCase();
-          const status = match.extendedProps.status;
-          const gym = match.extendedProps.gym;
-          const color = match.className.includes("confirmed-event")
-                        ? getColor(team)
-                        : "transparent";
-          const border = match.className.includes("open-event")
-                         ? `border: 1px solid ${getColor(team)}`
-                         : "";
-          if (match.start.startsWith("2025-09-15")) return; // 🚫 placeholder
+        const bgStyle = isSpecial ? 'background:#fff3cd;' : '';
+        let cell = `<td style="${bgStyle}"><strong>${d}</strong>`;
+        if (isSpecial) cell += `<div class="spielsamstag-label">Spielsamstag</div>`;
 
-          const text = `${match.title}<br>${gym || ''}`;
-          const htmlMatch = `<div class="match" 
+        matches.forEach(match => {
+          if (match.start.startsWith("2025-09-15")) return; // skip placeholders
+
+          const props = match.extendedProps;
+          const team = props.wiedikonTeam;
+          const type = props.homeaway?.toLowerCase();
+          const status = props.status;
+          const gym = props.gym;
+          const league = props.group;
+          const color = match.className.includes("confirmed-event") ? getColor(team) : "transparent";
+          const border = match.className.includes("open-event") ? `border: 1px solid ${getColor(team)}` : "";
+
+          cell += `<div class="match" 
             data-team="${team}" 
             data-type="${type}" 
             style="background:${color};${border}">
-              ${match.start.slice(11,16)}<br>${text}
-              ${status ? `<small class="status">${status}</small>` : ""}
-            </div>`;
-          cell += htmlMatch;
+            ${match.start.slice(11,16)}<br>
+            ${match.title}<br>
+            <small>${league} • ${type?.charAt(0).toUpperCase() + type?.slice(1)}</small><br>
+            ${gym ? `${gym}<br>` : ''}
+            ${status ? `<small class="status">${status}</small>` : ''}
+          </div>`;
         });
 
         cell += '</td>';
@@ -163,6 +168,13 @@
   }
 
   document.addEventListener("DOMContentLoaded", () => {
+    // 🕒 Display formatted last update
+    if (typeof last_updated_at === "string") {
+      const stamp = document.getElementById("last-updated");
+      const formatted = new Date(last_updated_at).toLocaleDateString("en-GB");
+      stamp.textContent = `– last update as of ${formatted}`;
+    }
+
     populateTeamFilter(calendarEvents);
     renderCalendar(calendarEvents);
   });
