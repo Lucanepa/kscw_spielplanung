@@ -1,11 +1,64 @@
-<script src="calendar_data.js"></script>
-const calendar = new FullCalendar.Calendar(document.getElementById("calendar"), {
-  initialView: "dayGridMonth",
-  events: calendarEvents,
-  eventDidMount: function(info) {
-    if (info.event.classNames.includes("spielsamstag")) {
-      info.el.innerHTML += "<br><b>Spielsamstag</b>";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>KSC Wiedikon Match Calendar</title>
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js"></script>
+  <script src="calendar_data.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      margin: 0;
+      padding: 0;
     }
-  }
-});
-calendar.render();
+    #header {
+      background: #0073aa;
+      color: white;
+      padding: 10px 20px;
+      font-size: 1.2em;
+      font-weight: bold;
+    }
+    #calendar {
+      max-width: 900px;
+      margin: 30px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .spielsamstag {
+      background-color: gold !important;
+    }
+    .open-event {
+      border: 2px solid #0073aa !important;
+      background-color: transparent !important;
+      color: black !important;
+    }
+    .confirmed-event {
+      background-color: steelblue !important;
+      color: white !important;
+    }
+  </style>
+</head>
+<body>
+  <div id="header">KSC Wiedikon Match Calendar</div>
+  <div id="calendar">Loading calendar…</div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const calendar = new FullCalendar.Calendar(document.getElementById("calendar"), {
+        initialView: "dayGridMonth",
+        events: calendarEvents,
+        eventDidMount: function(info) {
+          if (info.event.classNames.includes("spielsamstag")) {
+            info.el.innerHTML += "<br><b>Spielsamstag</b>";
+          }
+        }
+      });
+      calendar.render();
+    });
+  </script>
+</body>
+</html>
