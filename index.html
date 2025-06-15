@@ -177,12 +177,34 @@
       const rawMatches = valueRanges[0].values||[];
       if(rawMatches.length<2){ renderCalendar([],[]); return; }
       const hdr = rawMatches[0].map(h=>h?(''+h).trim().toLowerCase():'');
-      const ix  = name=>hdr.indexOf(name.toLowerCase());
-      const [iTeam,iOpp,iDate,iTime,iType,iStatus,iGym,iChamp] = [
-        ix('team'), ix('opponent team'), ix('date'),
-        ix('time'), ix('type'), ix('status'), ix('gym/halle'),
-        ix('championship')
-      ];
+      const ix = name => hdr.indexOf(name.toLowerCase());
+      const [
+  iTeam,
+  iChampionship,    // ← new
+  iOpponentTeam,
+  iWeekday,
+  iDate,
+  iTime,
+  iType,
+  iStatus,
+  iGym,
+  iVolleymanager,
+  iIssues,
+  iNotes
+] = [
+  ix('team'),
+  ix('championship'),
+  ix('opponent team'),
+  ix('weekday'),
+  ix('date'),
+  ix('time'),
+  ix('type'),
+  ix('status'),
+  ix('gym/halle'),
+  ix('volleymanager'),
+  ix('issues'),
+  ix('notes')
+];
 
       let matches = rawMatches.slice(1).map(r=>{
         const iso = parseDateDMY(r[iDate]||'');
