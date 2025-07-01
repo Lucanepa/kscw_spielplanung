@@ -71,6 +71,13 @@
     <div class="d-flex flex-wrap align-items-center gap-3 mt-2">
       <button class="btn btn-primary" onclick="loadData()">🔄 Refresh</button>
 
+      <!-- ADDED: Sport filter -->
+      <select id="sport-filter" class="form-select form-select-sm" style="width:auto;">
+        <option value="all">All Sports</option>
+        <option value="Volleyball">Volleyball</option>
+        <option value="Basketball">Basketball</option>
+      </select>
+
       <div class="form-check form-switch">
         <input class="form-check-input" type="checkbox" role="switch" id="show-absences-switch" checked>
         <label class="form-check-label" for="show-absences-switch">Show Absences</label>
@@ -112,6 +119,8 @@
       '3. Liga Herren B':'H3L B','HU23 A':'HU23','4. Liga Herren A':'H4L A'
     };
 
+    // ADDED: Sport filter select element
+    const sportFilterSelect  = document.getElementById('sport-filter');
     const showAbsencesSwitch = document.getElementById('show-absences-switch');
     const teamFilterSelect   = document.getElementById('team-filter');
     const typeFilterSelect   = document.getElementById('type-filter');
@@ -152,20 +161,23 @@
         if (rawMatches.length < 2) { renderCalendar([], []); return; }
         const hdr = rawMatches[0].map(h => h.trim().toLowerCase());
         const ix = name => hdr.indexOf(name.toLowerCase());
-        const [iTeam, iChamp, iOpp, iWeekday, iDate, iTime, iType, iStatus, iGym] = [
+        // MODIFIED: Added iSport
+        const [iTeam, iChamp, iOpp, iWeekday, iDate, iTime, iType, iStatus, iGym, iSport] = [
           ix('team'), ix('championship'), ix('opponent team'), ix('weekday'),
-          ix('date'), ix('time'), ix('type'), ix('status'), ix('gym/halle')
+          ix('date'), ix('time'), ix('type'), ix('status'), ix('gym/halle'), ix('sport')
         ];
 
+        // MODIFIED: Added sport property to match objects
         let matches = rawMatches.slice(1).map(r => ({
-          team:         r[iTeam]   || '',
+          team:         r[iTeam]    || '',
           championship: r[iChamp]   || '',
           opponent:     r[iOpp]     || '',
-          date:         parseDateDMY(r[iDate]  || ''),
+          date:         parseDateDMY(r[iDate] || ''),
           time:         r[iTime]    || '',
           type:         (r[iType]   || '').toLowerCase(),
           status:       r[iStatus]  || '',
           gym:          r[iGym]     || '',
+          sport:        r[iSport]   || '',
           isPref:       false
         })).filter(m => /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(m.date));
 
@@ -184,19 +196,27 @@
         });
 
         // Absences
-        (valueRanges[2].values || []).slice(1).forEach(r => {
-          const ph = valueRanges[2].values[0].map(h => h.trim().toLowerCase());
-          const pi = name => ph.indexOf(name);
-          const team = r[pi('team')], prio = r[pi('priority')], d0 = r[pi('date from')], d1 = r[pi('date to')];
-          if (!team || !prio || !d0 || !d1) return;
-          const start = parseDateObj(d0), end = parseDateObj(d1);
-          for (let d = new Date(start); d <= end; d.setDate(d.getDate()+1)) {
-            matches.push({
-              team, opponent: '', date: `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`,
-              time: '', type: 'absence', status: '', gym: '', isPref: true, priority: prio
+        // MODIFIED: Now parses 'sport' column from preferences sheet
+        const prefValues = valueRanges[2].values || [];
+        if (prefValues.length > 1) {
+            const ph = prefValues[0].map(h => h.trim().toLowerCase());
+            const pi = name => ph.indexOf(name);
+            const piTeam = pi('team'), piPrio = pi('priority'), piD0 = pi('date from'), piD1 = pi('date to'), piSport = pi('sport');
+
+            prefValues.slice(1).forEach(r => {
+                const team = r[piTeam], prio = r[piPrio], d0 = r[piD0], d1 = r[piD1], sport = r[piSport];
+                if (!team || !prio || !d0 || !d1 || !sport) return;
+                const start = parseDateObj(d0), end = parseDateObj(d1);
+                if (!start || !end) return;
+                for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                    matches.push({
+                        team, opponent: '', date: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`,
+                        time: '', type: 'absence', status: '', gym: '', isPref: true, priority: prio,
+                        sport: sport || ''
+                    });
+                }
             });
-          }
-        });
+        }
 
         populateTeamFilter(matches);
         renderCalendar(matches, closures);
@@ -207,16 +227,22 @@
       }
     }
 
+    // MODIFIED: applyFilters now includes sport filter logic
     function applyFilters() {
+      const sportVal = sportFilterSelect.value;
       const showAbs = showAbsencesSwitch.checked;
       const teamVal = teamFilterSelect.value;
       const typeVal = typeFilterSelect.value;
+
       document.querySelectorAll('.match').forEach(el => {
         const isAbs = el.classList.contains('absence-entry');
         let visible = true;
-        if (!showAbs && isAbs) visible = false;
+        
+        if (sportVal !== 'all' && el.dataset.sport !== sportVal) visible = false;
+        if (visible && !showAbs && isAbs) visible = false;
         if (visible && teamVal !== 'all' && el.dataset.team !== teamVal) visible = false;
         if (visible && !isAbs && typeVal !== 'all' && !el.dataset.type.includes(typeVal)) visible = false;
+
         el.classList.toggle('d-none', !visible);
       });
     }
@@ -249,7 +275,8 @@
           const caption = isSpecial ? ` <small style="color:#856404">Spielsamstag</small>` : '';
           let cell = `<td style="${cellBg}"><strong>${d}</strong>${caption}`;
           evs.forEach(e => {
-            const attrs = `data-team="${e.team}" data-type="${e.type}"`;
+            // MODIFIED: Added data-sport attribute
+            const attrs = `data-team="${e.team}" data-type="${e.type}" data-sport="${e.sport || ''}"`;
             if (e.isPref) {
               cell += `<div class="match absence-entry" ${attrs}>🏖️ ${e.team} Prio ${e.priority}</div>`;
             } else {
@@ -283,6 +310,8 @@
     }
 
     document.addEventListener('DOMContentLoaded', loadData);
+    // ADDED: event listener for the new sport filter
+    sportFilterSelect.addEventListener('change', applyFilters);
     showAbsencesSwitch.addEventListener('change', applyFilters);
     teamFilterSelect.addEventListener('change', applyFilters);
     typeFilterSelect.addEventListener('change', applyFilters);
