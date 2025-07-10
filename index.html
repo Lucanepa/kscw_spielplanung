@@ -101,15 +101,12 @@
     // === CONFIG ===
     const SPREADSHEET_ID = '16hr2bshVSHoQGZ73xGZiJpnhlBwu6Mn3I5YC4Z-ixXY';
     const API_KEY = 'AIzaSyB4tX_WxrFRajdEdqVI-yTWV0uRNqJQkfc';
-    const RANGES = ['Team_Matches','Gym Closed','Team_Preferences'];
+    const RANGES = ['Team_Matches','Gym Closed','Team_Preferences','Übersicht VB + BB'];
 
     const specialDates = ['2025-09-27','2025-11-01','2026-01-31','2026-03-07'];
 
-    const teamColor = {
-      'VB Damen 1':'#e74c3c','VB Damen 2':'#f39c12','VB Damen 3':'#f1c40f','VB Damen 4':'#de16ca',
-      'VB DU23 1':'#16a085','VB DU23 2':'#2980b9','VB Herren 1':'#bd8fe3','VB Herren 2':'#d35400',
-      'VB Herren 3':'#4cb55c','VB Herren Legends':'#9898fa','VB HU23':'#d7d7fa'
-    };
+    // MODIFIED: Remove hardcoded team colors - will be loaded from sheet
+    const teamColor = {};
 
     const championshipAlias = {
       '3. Liga Damen A':'D3L A','3. Liga Damen B':'D3L B',
@@ -124,6 +121,20 @@
     const showAbsencesSwitch = document.getElementById('show-absences-switch');
     const teamFilterSelect   = document.getElementById('team-filter');
     const typeFilterSelect   = document.getElementById('type-filter');
+
+    // ADDED: Function to load team colors from sheet
+    function loadTeamColors(teamColorSheet) {
+      if (!teamColorSheet || teamColorSheet.length < 2) return;
+      
+      // Skip header row, process data rows
+      teamColorSheet.slice(1).forEach(row => {
+        const teamName = row[0]?.trim();
+        const color = row[1]?.trim();
+        if (teamName && color && color.startsWith('#')) {
+          teamColor[teamName] = color;
+        }
+      });
+    }
 
     function parseDateDMY(dmy='') {
       if (!dmy.includes('/')) return '';
@@ -155,6 +166,9 @@
         const res = await fetch(url);
         if (!res.ok) throw new Error(await res.text());
         const { valueRanges } = await res.json();
+
+        // ADDED: Load team colors from sheet
+        loadTeamColors(valueRanges[3].values || []);
 
         // Matches
         const rawMatches = valueRanges[0].values || [];
@@ -284,7 +298,19 @@
               const low = e.type;
               if (e.opponent) mv = low.includes('home') ? `${e.team} – ${e.opponent}` :
                            low.includes('away') ? `${e.opponent} – ${e.team}` : `${e.team} vs ${e.opponent}`;
-              const style = e.status.trim().toLowerCase()==='waiting' ? `border:1px solid ${teamColor[e.team]}` : `background:${teamColor[e.team]}`;
+              
+              // MODIFIED: Add opacity for away games and handle team colors
+              let style = '';
+              const teamCol = teamColor[e.team] || '#ccc';
+              const isAway = low.includes('away');
+              const opacity = isAway ? '0.5' : '1';
+              
+              if (e.status.trim().toLowerCase()==='waiting') {
+                style = `border:1px solid ${teamCol}; opacity:${opacity}`;
+              } else {
+                style = `background:${teamCol}; opacity:${opacity}`;
+              }
+              
               cell += `<div class="match" ${attrs} style="${style}">` +
                       `${e.time ? `<div>${e.time}${e.championship ? ` (${championshipAlias[e.championship]||e.championship})` : ''}</div>` : ''}` +
                       `<div>${mv}</div>` +
