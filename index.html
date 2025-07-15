@@ -71,6 +71,17 @@
       border-radius: 3px 0 0 3px;
       flex-shrink: 0;
     }
+    .home-away-indicator {
+      width: 20px;
+      background: #007bff;
+      color: white;
+      font-size: 9px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
     .match-content {
       flex: 1;
       padding: 4px;
@@ -252,7 +263,7 @@
       'Frauen 3. Liga Gruppe A':'D3L A',
       'Frauen 3. Liga Gruppe B':'D3L B',
       'Frauen 5. Liga Gruppe A':'D5L A',
-      'Frauen 3. Liga Gruppe A':'D5L B',
+      'Frauen 3. Liga Gruppe A':'D5LB',
       'Frauen U23 1. Liga':'DU23-1',
       'Frauen U23 2. Liga':'DU23-2',
       'Herren 2. Liga':'H2L',
@@ -471,10 +482,16 @@
                   <tbody>
         `;
         
-        // Sort matches by date and time
+        // Sort matches by date and time (matches without time go to bottom)
         filteredMatches.sort((a, b) => {
           const dateCompare = a.date.localeCompare(b.date);
           if (dateCompare !== 0) return dateCompare;
+          
+          // If one has time and the other doesn't, the one with time comes first
+          if (a.time && !b.time) return -1;
+          if (!a.time && b.time) return 1;
+          
+          // If both have time or both don't have time, sort alphabetically
           return (a.time || '').localeCompare(b.time || '');
         });
         
@@ -506,6 +523,17 @@
           const homeTeamFull = teamFullNames[homeTeam] || homeTeam;
           const awayTeamFull = teamFullNames[awayTeam] || awayTeam;
           
+          // Format time column to show league in parentheses even when no time
+          let timeDisplay = match.time || '';
+          if (match.championship) {
+            const leagueAlias = championshipAlias[match.championship] || match.championship;
+            if (timeDisplay) {
+              timeDisplay += ` (${leagueAlias})`;
+            } else {
+              timeDisplay = `(${leagueAlias})`;
+            }
+          }
+          
           teamHtml += `
             <tr data-team="${match.team}" data-type="${match.type}" data-sport="${match.sport || ''}">
               <td>${homeTeamFull}</td>
@@ -513,7 +541,7 @@
               <td>${matchType}</td>
               <td>${dateStr}</td>
               <td>${weekday}</td>
-              <td>${match.time || ''}</td>
+              <td>${timeDisplay}</td>
               <td>${championshipAlias[match.championship] || match.championship || ''}</td>
               <td>${match.gym || ''}</td>
               <td>${match.status || ''}</td>
@@ -808,8 +836,19 @@
                 style = `background:${teamCol}; opacity:${opacity}`;
               }
               
+              // Determine home/away indicator text
+              let homeAwayText = '';
+              if (low.includes('home')) {
+                homeAwayText = 'H';
+              } else if (low.includes('away')) {
+                homeAwayText = 'A';
+              } else {
+                homeAwayText = 'vs';
+              }
+              
               cell += `<div class="match-container">
                         <div class="sport-indicator">${e.sport === 'Basketball' ? 'BB' : 'VB'}</div>
+                        <div class="home-away-indicator">${homeAwayText}</div>
                         <div class="match-content" ${attrs} style="${style}">` +
                         `${e.time ? `<div>${e.time}${e.championship ? ` (${championshipAlias[e.championship]||e.championship})` : ''}</div>` : ''}` +
                         `<div>${mv}</div>` +
