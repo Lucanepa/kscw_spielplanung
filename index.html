@@ -348,17 +348,24 @@
     function renderListByDay() {
       const container = document.getElementById('list-container');
       
-      // Group matches by date
+      // Group matches by date (excluding absences)
       const matchesByDate = {};
       allMatches.forEach(match => {
+        if (match.isPref) return; // Skip absences in list view
         if (!matchesByDate[match.date]) {
           matchesByDate[match.date] = [];
         }
         matchesByDate[match.date].push(match);
       });
       
-      // Sort dates
-      const sortedDates = Object.keys(matchesByDate).sort();
+      // Sort dates and filter to September-May range
+      const sortedDates = Object.keys(matchesByDate).sort().filter(date => {
+        const dateObj = new Date(date);
+        const month = dateObj.getMonth() + 1; // 0-indexed to 1-indexed
+        const year = dateObj.getFullYear();
+        // Include September 2025 to May 2026
+        return (year === 2025 && month >= 9) || (year === 2026 && month <= 5);
+      });
       
       sortedDates.forEach(date => {
         const matches = matchesByDate[date];
@@ -393,9 +400,10 @@
     function renderListByTeam() {
       const container = document.getElementById('list-container');
       
-      // Group matches by team
+      // Group matches by team (excluding absences)
       const matchesByTeam = {};
       allMatches.forEach(match => {
+        if (match.isPref) return; // Skip absences in list view
         if (!match.team) return;
         if (!matchesByTeam[match.team]) {
           matchesByTeam[match.team] = [];
@@ -420,10 +428,6 @@
           const dateCompare = a.date.localeCompare(b.date);
           if (dateCompare !== 0) return dateCompare;
           return (a.time || '').localeCompare(b.time || '');
-        });
-        
-        matches.forEach(match => {
-          teamHtml += renderListMatch(match);
         });
         
         teamHtml += '</div></div>';
