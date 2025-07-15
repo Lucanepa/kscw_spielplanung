@@ -500,7 +500,8 @@
         let visible = true;
         
         if (sportVal !== 'all' && el.dataset.sport !== sportVal) visible = false;
-        if (visible && !showAbs && isAbs) visible = false;
+        // In list view, always hide absences regardless of the switch
+        if (visible && isAbs) visible = false;
         if (visible && teamVal !== 'all' && el.dataset.team !== teamVal) visible = false;
         if (visible && !isAbs && typeVal !== 'all' && !el.dataset.type.includes(typeVal)) visible = false;
 
