@@ -417,6 +417,18 @@
       sortedTeams.forEach(team => {
         const matches = matchesByTeam[team];
         
+        // Filter matches to September-May range
+        const filteredMatches = matches.filter(match => {
+          const dateObj = new Date(match.date);
+          const month = dateObj.getMonth() + 1; // 0-indexed to 1-indexed
+          const year = dateObj.getFullYear();
+          // Include September 2025 to May 2026
+          return (year === 2025 && month >= 9) || (year === 2026 && month <= 5);
+        });
+        
+        // Skip teams with no matches in the date range
+        if (filteredMatches.length === 0) return;
+        
         let teamHtml = `
           <div class="list-team">
             <div class="list-team-header">${team}</div>
@@ -424,10 +436,14 @@
         `;
         
         // Sort matches by date and time
-        matches.sort((a, b) => {
+        filteredMatches.sort((a, b) => {
           const dateCompare = a.date.localeCompare(b.date);
           if (dateCompare !== 0) return dateCompare;
           return (a.time || '').localeCompare(b.time || '');
+        });
+        
+        filteredMatches.forEach(match => {
+          teamHtml += renderListMatch(match);
         });
         
         teamHtml += '</div></div>';
