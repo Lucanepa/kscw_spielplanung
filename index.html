@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -438,16 +439,19 @@
         // Skip teams with no matches in the date range
         if (filteredMatches.length === 0) return;
         
+        // Get the full name for the team header
+        const teamFullName = teamFullNames[team] || team;
+        
         let teamHtml = `
           <div class="list-team">
-            <div class="list-team-header">${team}</div>
+            <div class="list-team-header">${teamFullName}</div>
             <div class="list-team-content">
               <div class="table-responsive">
                 <table class="table table-striped table-hover">
                   <thead class="table-dark">
                     <tr>
                       <th>Home team</th>
-                      <th>Guesz team</th>
+                      <th>Guest team</th>
                       <th>Home / Away</th>
                       <th>Date</th>
                       <th>Weekday</th>
