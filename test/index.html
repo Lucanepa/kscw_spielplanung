@@ -230,6 +230,12 @@
     }
     /* Removed the hardcoded absence hiding - will be handled by JavaScript */
     
+    /* ADDED: Force hide absences when toggle is off */
+    .hide-absences .match-container .match-content.absence-entry,
+    .hide-absences .match-container-compact.absence-entry {
+      display: none !important;
+    }
+    
     .desktop-mode .match-container-compact {
       display: none !important;
     }
@@ -1056,7 +1062,15 @@
       console.log('teamVal:', teamVal);
       console.log('typeVal:', typeVal);
 
-      // Filter desktop view
+      // Add/remove CSS class to control absence visibility
+      const body = document.body;
+      if (!showAbs) {
+        body.classList.add('hide-absences');
+      } else {
+        body.classList.remove('hide-absences');
+      }
+
+      // Filter other elements normally
       document.querySelectorAll('.match-container').forEach(el => {
         const matchContent = el.querySelector('.match-content');
         const isAbs = matchContent.classList.contains('absence-entry');
@@ -1070,7 +1084,6 @@
         });
         
         if (sportVal !== 'all' && matchContent.dataset.sport !== sportVal) visible = false;
-        if (visible && !showAbs && isAbs) visible = false;
         if (visible && teamVal !== 'all' && matchContent.dataset.team !== teamVal) visible = false;
         if (visible && !isAbs && typeVal !== 'all' && !matchContent.dataset.type.includes(typeVal)) visible = false;
 
@@ -1098,7 +1111,6 @@
         });
         
         if (sportVal !== 'all' && el.dataset.sport !== sportVal) visible = false;
-        if (visible && !showAbs && isAbs) visible = false;
         if (visible && teamVal !== 'all' && el.dataset.team !== teamVal) visible = false;
         if (visible && !isAbs && typeVal !== 'all' && !el.dataset.type.includes(typeVal)) visible = false;
 
