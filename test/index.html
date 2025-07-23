@@ -525,7 +525,8 @@
     function getCupEmoji(championship) {
       if (!championship) return '';
       const champ = championship.toLowerCase();
-      if (champ.includes('cup')) return '🏆';
+      if (champ.includes('swiss volley cup')) return '🏆';
+      if (champ.includes('züri cup') || champ.includes('zuri cup')) return '🥈';
       return '';
     }
 
@@ -916,8 +917,8 @@
           let visible = true;
           
           if (sportVal !== 'all' && el.dataset.sport !== sportVal) visible = false;
-          // In list view, always hide absences regardless of the switch
-          if (visible && isAbs) visible = false;
+          // Handle absences based on the switch
+          if (visible && !showAbs && isAbs) visible = false;
           if (visible && teamVal !== 'all' && el.dataset.team !== teamVal) visible = false;
           if (visible && !isAbs && typeVal !== 'all' && !el.dataset.type.includes(typeVal)) visible = false;
 
@@ -1077,7 +1078,14 @@
         if (visible && teamVal !== 'all' && el.dataset.team !== teamVal) visible = false;
         if (visible && !isAbs && typeVal !== 'all' && !el.dataset.type.includes(typeVal)) visible = false;
 
-        el.classList.toggle('d-none', !visible);
+        // Override the CSS display:none for absences when showAbs is true
+        if (isAbs && showAbs) {
+          el.style.display = 'block';
+        } else if (isAbs && !showAbs) {
+          el.style.display = 'none';
+        } else if (!isAbs) {
+          el.classList.toggle('d-none', !visible);
+        }
       });
     }
 
