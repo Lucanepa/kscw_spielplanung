@@ -142,7 +142,7 @@
       padding: 4px;
       padding-bottom: 20px; /* Add space for indicators */
       border-radius: 3px;
-      font-size: 11px;
+      font-size: 9px; /* Smaller text for mobile */
       color: black;
       line-height: 1.2;
       cursor: pointer;
@@ -204,6 +204,7 @@
       text-align: center;
       z-index: 1;
       text-transform: uppercase;
+      cursor: pointer;
     }
     .closure-with-events {
       background: #333 !important;
@@ -436,8 +437,8 @@
 
       <!-- ADDED: Mobile/Desktop view toggle -->
       <div class="view-toggle-group">
-        <button class="btn btn-outline-secondary active" id="desktop-view-btn" onclick="switchDisplayMode('desktop')">🖥️ Desktop</button>
-        <button class="btn btn-outline-secondary" id="mobile-view-btn" onclick="switchDisplayMode('mobile')">📱 Mobile</button>
+        <button class="btn btn-outline-secondary active" id="desktop-view-btn" onclick="switchDisplayMode('desktop')" title="Desktop View">🖥️</button>
+        <button class="btn btn-outline-secondary" id="mobile-view-btn" onclick="switchDisplayMode('mobile')" title="Mobile View">📱</button>
       </div>
 
       <!-- ADDED: View toggle buttons -->
@@ -612,6 +613,17 @@
         applyFilters();
       }
     }
+    
+    // ADDED: Auto-detect mobile and switch
+    function detectMobileAndSwitch() {
+      if (window.innerWidth <= 768) {
+        switchDisplayMode('mobile');
+      }
+    }
+    
+    // Run on load and resize
+    window.addEventListener('load', detectMobileAndSwitch);
+    window.addEventListener('resize', detectMobileAndSwitch);
     
     // ADDED: View switching functions
     function switchView(view) {
@@ -1274,7 +1286,7 @@
             const hasEvents = evs.length > 0;
             const closureClass = hasEvents ? 'closure closure-with-events' : 'closure';
             const title = reason.charAt(0).toUpperCase()+reason.slice(1);
-            cell += `<div class="${closureClass}">${title}</div>`;
+            cell += `<div class="${closureClass}" onclick="showClosureDetails('${reason.replace(/'/g, '\\\'')}')">🚫 ${title}</div>`;
           }
           cell += '</td>';
           html += cell;
@@ -1300,6 +1312,24 @@
     }
 
     // ADDED: Modal functions
+    function showClosureDetails(reason) {
+      const modal = document.getElementById('match-modal');
+      const title = document.getElementById('modal-title');
+      const subtitle = document.getElementById('modal-subtitle');
+      const details = document.getElementById('modal-details');
+      
+      title.textContent = '🚫 Gym Closed';
+      subtitle.textContent = '';
+      details.innerHTML = `
+        <div class="modal-detail-row">
+          <div class="modal-detail-label">Reason:</div>
+          <div class="modal-detail-value">${reason}</div>
+        </div>
+      `;
+      
+      modal.style.display = 'flex';
+    }
+    
     function showMatchDetails(match) {
       const modal = document.getElementById('match-modal');
       const title = document.getElementById('modal-title');
