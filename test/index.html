@@ -1195,6 +1195,18 @@
             console.log(`Indicator ${index}:`, el.textContent, 'in cell:', el.closest('td')?.textContent?.trim());
           });
         }
+        
+        // Also check for any sport indicators in cells that should be empty
+        document.querySelectorAll('td').forEach(td => {
+          const cellText = td.textContent.trim();
+          if (cellText.includes('SEASON NOT STARTED YET') || cellText.match(/^\d+$/)) {
+            const indicators = td.querySelectorAll('.sport-indicator, .sport-indicator-compact');
+            if (indicators.length > 0) {
+              console.log('Found sport indicators in empty/season cells:', indicators.length);
+              indicators.forEach(el => el.remove());
+            }
+          }
+        });
       }, 100);
       const months = [];
       for (let d = new Date(2025,8,1); d < new Date(2026,5,1); d.setMonth(d.getMonth()+1)) months.push(new Date(d));
@@ -1290,6 +1302,15 @@
         html += '<td></td>'.repeat((7-(offset+last.getDate())%7)%7);
         html += '</tr></tbody></table>';
         cont.insertAdjacentHTML('beforeend', html);
+        
+        // Immediately clean up any sport indicators in empty cells
+        document.querySelectorAll('td').forEach(td => {
+          const cellText = td.textContent.trim();
+          if (cellText.includes('SEASON NOT STARTED YET') || (cellText.match(/^\d+$/) && !td.querySelector('.match-container'))) {
+            const indicators = td.querySelectorAll('.sport-indicator, .sport-indicator-compact');
+            indicators.forEach(el => el.remove());
+          }
+        });
       });
       applyFilters();
     }
