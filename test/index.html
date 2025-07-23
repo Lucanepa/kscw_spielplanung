@@ -1139,6 +1139,16 @@
           el.classList.add('d-none');
         }
       });
+      
+      // Clean up any leftover elements after filtering (this is what mobile mode does)
+      document.querySelectorAll('.match-container').forEach(el => {
+        if (el.style.display === 'none' || el.classList.contains('d-none')) {
+          const sportIndicator = el.querySelector('.sport-indicator');
+          if (sportIndicator) {
+            sportIndicator.remove();
+          }
+        }
+      });
     }
 
     function renderCalendar(matches, closures) {
@@ -1157,6 +1167,21 @@
       // Also clean up any absolutely positioned elements that might be floating
       document.querySelectorAll('.sport-indicator, .home-away-indicator, .cup-indicator, .sport-indicator-compact, .home-away-indicator-compact, .cup-indicator-compact').forEach(el => {
         if (el.closest('#calendar-container')) {
+          el.remove();
+        }
+      });
+      
+      // Clean up any leftover match containers that might be causing the random VB labels
+      document.querySelectorAll('.match-container, .match-container-compact').forEach(el => {
+        if (el.closest('#calendar-container') && !el.querySelector('.match-content') && !el.textContent.trim()) {
+          el.remove();
+        }
+      });
+      
+      // Force cleanup of any empty containers that might have sport indicators
+      document.querySelectorAll('.match-container').forEach(el => {
+        const hasContent = el.querySelector('.match-content') || el.textContent.trim();
+        if (!hasContent) {
           el.remove();
         }
       });
