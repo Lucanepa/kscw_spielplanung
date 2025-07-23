@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
   <title>Team Matches Calendar</title>
   <link 
     href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" 
@@ -53,58 +53,297 @@
       color: #555;
       font-size: 9px;
     }
-    /* ADDED: Sport indicator styles */
+    /* MODIFIED: Sport indicator styles - indicators now positioned at bottom right */
     .match-container {
       display: flex;
       align-items: stretch;
       margin: 2px 0;
+      position: relative;
     }
     .sport-indicator {
-      width: 20px;
+      position: absolute;
+      bottom: 2px;
+      right: 2px;
+      width: 16px;
+      height: 16px;
       background: #333;
       color: white;
-      font-size: 9px;
+      font-size: 8px;
       font-weight: bold;
       display: flex;
       align-items: center;
       justify-content: center;
-      border-radius: 3px 0 0 3px;
-      flex-shrink: 0;
+      border-radius: 2px;
+      z-index: 15;
     }
     .home-away-indicator {
-      width: 20px;
+      position: absolute;
+      bottom: 2px;
+      right: 20px;
+      width: 16px;
+      height: 16px;
       background: #007bff;
       color: white;
-      font-size: 9px;
+      font-size: 8px;
       font-weight: bold;
       display: flex;
       align-items: center;
       justify-content: center;
-      flex-shrink: 0;
+      border-radius: 2px;
+      z-index: 15;
     }
-    .match-content {
-      flex: 1;
-      padding: 4px;
-      border-radius: 0 3px 3px 0;
-      font-size: 11px;
-      color: black;
-      position: relative;
-      line-height: 1.2;
-    }
-    .absence-entry .match-content {
-      border: 1px dotted #007bff;
-      background: transparent;
-    }
-    .closure {
+    
+    /* ADDED: Cup indicators */
+    .cup-indicator {
       position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      opacity: 0.8;
+      bottom: 2px;
+      right: 38px;
+      width: 16px;
+      height: 16px;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 12px;
+      z-index: 15;
+    }
+    .match-container-compact-wrapper {
+      position: relative;
+      margin: 2px 0;
+    }
+    .cup-indicator-compact {
+      position: absolute;
+      bottom: 2px;
+      right: 38px;
+      width: 16px;
+      height: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      z-index: 15;
+    }
+    .match-content {
+      flex: 1;
+      padding: 4px;
+      padding-bottom: 20px; /* Add space for indicators */
+      border-radius: 3px;
+      font-size: 11px;
+      color: black;
+      position: relative;
+      line-height: 1.2;
+      background: rgba(255, 255, 255, 0.7);
+      z-index: 10;
+    }
+    .absence-entry .match-content {
+      border: 1px dotted #007bff;
+      background: rgba(255, 255, 255, 0.6);
+    }
+    
+    /* MODIFIED: New compact indicator styles for mobile */
+    .match-container-compact {
+      position: relative;
+      margin: 2px 0;
+      padding: 4px;
+      padding-bottom: 20px; /* Add space for indicators */
+      border-radius: 3px;
+      font-size: 9px; /* Smaller text for mobile */
+      color: black;
+      line-height: 1.2;
+      cursor: pointer;
+      min-height: 40px;
+      background: rgba(255, 255, 255, 0.7);
+      z-index: 10;
+    }
+    .match-container-compact.absence-entry {
+      background: rgba(255, 255, 255, 0.6);
+      border: 1px dotted #007bff;
+    }
+    .match-container-compact .sport-indicator-compact {
+      position: absolute;
+      bottom: 2px;
+      right: 2px;
+      width: 16px;
+      height: 16px;
+      background: #333;
       color: white;
+      font-size: 8px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 2px;
+      z-index: 15;
+    }
+    .match-container-compact .home-away-indicator-compact {
+      position: absolute;
+      bottom: 2px;
+      right: 20px;
+      width: 16px;
+      height: 16px;
+      background: #007bff;
+      color: white;
+      font-size: 8px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 2px;
+      z-index: 15;
+    }
+    
+    /* ADDED: Closure styles */
+    .closure {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: #000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding-top: 5px;
+      font-size: 12px;
+      font-weight: bold;
+      color: #ff4444;
+      text-align: center;
+      z-index: 1;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+    .closure-with-events {
+      background: #333 !important;
+    }
+    
+    /* ADDED: Mobile closure styling */
+    .mobile-mode .closure-text {
+      display: none;
+    }
+    .mobile-mode .closure-emoji {
+      font-size: 16px;
+      margin-top: 10px;
+    }
+    
+    /* ADDED: Mobile responsive styles */
+    @media (max-width: 768px) {
+      .calendar th, .calendar td {
+        height: 60px;
+        font-size: 10px;
+        padding: 2px;
+      }
+    }
+    
+    /* ADDED: Manual display mode classes */
+    .mobile-mode .match-container {
+      display: none !important;
+    }
+    .mobile-mode .match-container-compact {
+      display: block !important;
+    }
+    .mobile-mode .match {
+      display: none !important;
+    }
+    /* Removed the hardcoded absence hiding - will be handled by JavaScript */
+    
+    /* ADDED: Force hide absences when toggle is off */
+    .hide-absences .match-container .match-content.absence-entry,
+    .hide-absences .match-container-compact.absence-entry {
+      display: none !important;
+    }
+    
+    .desktop-mode .match-container-compact {
+      display: none !important;
+    }
+    .desktop-mode .match-container {
+      display: flex !important;
+    }
+    
+    /* ADDED: Mobile responsive styles (automatic) */
+    @media (max-width: 768px) {
+      .auto-mobile .match-container {
+        display: none !important;
+      }
+      .auto-mobile .match-container-compact {
+        display: block !important;
+      }
+      .auto-mobile .match {
+        display: none !important;
+      }
+      /* Removed the hardcoded absence hiding - will be handled by JavaScript */
+    }
+    
+    @media (min-width: 769px) {
+      .auto-mobile .match-container-compact {
+        display: none !important;
+      }
+      .auto-mobile .match-container {
+        display: flex !important;
+      }
+    }
+    
+    /* ADDED: Popup modal styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-content {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      max-width: 90%;
+      max-height: 80%;
+      overflow-y: auto;
+      position: relative;
+    }
+    .modal-close {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #666;
+    }
+    .modal-close:hover {
+      color: #000;
+    }
+    .modal-header {
+      margin-bottom: 15px;
+      padding-right: 30px;
+    }
+    .modal-title {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    .modal-subtitle {
+      font-size: 14px;
+      color: #666;
+    }
+    .modal-details {
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .modal-detail-row {
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+    }
+    .modal-detail-label {
+      font-weight: bold;
+      min-width: 80px;
+      margin-right: 10px;
+    }
+    .modal-detail-value {
+      flex: 1;
     }
     
     /* ADDED: List view styles */
@@ -205,9 +444,15 @@
 </head>
 <body>
   <div class="controls-header">
-    <h4>📅 Team Matches Planning</h4>
+    <h4 id="page-title">📅 Team Matches Planning</h4>
     <div class="d-flex flex-wrap align-items-center gap-3 mt-2">
       <button class="btn btn-primary" onclick="loadData()">🔄 Refresh</button>
+
+      <!-- ADDED: Mobile/Desktop view toggle -->
+      <div class="view-toggle-group">
+        <button class="btn btn-outline-secondary active" id="desktop-view-btn" onclick="switchDisplayMode('desktop')" title="Desktop View">🖥️</button>
+        <button class="btn btn-outline-secondary" id="mobile-view-btn" onclick="switchDisplayMode('mobile')" title="Mobile View">📱</button>
+      </div>
 
       <!-- ADDED: View toggle buttons -->
       <div class="view-toggle-group">
@@ -248,6 +493,18 @@
   <div id="calendar-container" class="calendar-container"></div>
   <div id="list-container" class="list-view" style="display: none;"></div>
 
+  <!-- ADDED: Modal for mobile match details -->
+  <div id="match-modal" class="modal-overlay">
+    <div class="modal-content">
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+      <div class="modal-header">
+        <div class="modal-title" id="modal-title"></div>
+        <div class="modal-subtitle" id="modal-subtitle"></div>
+      </div>
+      <div class="modal-details" id="modal-details"></div>
+    </div>
+  </div>
+
   <script>
     // === CONFIG ===
     const SPREADSHEET_ID = '16hr2bshVSHoQGZ73xGZiJpnhlBwu6Mn3I5YC4Z-ixXY';
@@ -276,8 +533,18 @@
     // ADDED: Global variables for view state
     let currentView = 'calendar';
     let currentListOrg = 'day';
+    let currentDisplayMode = 'auto'; // 'auto', 'desktop', 'mobile'
     let allMatches = [];
     let allClosures = [];
+    
+    // ADDED: Function to get cup emoji based on championship
+    function getCupEmoji(championship) {
+      if (!championship) return '';
+      const champ = championship.toLowerCase();
+      if (champ.includes('swiss volley cup')) return '🏆';
+      if (champ.includes('züri cup') || champ.includes('zuri cup')) return '🥈';
+      return '';
+    }
 
     // ADDED: Sport filter select element
     const sportFilterSelect  = document.getElementById('sport-filter');
@@ -326,6 +593,66 @@
         .forEach(team => teamFilterSelect.append(new Option(team, team)));
     }
 
+    // ADDED: Display mode switching function
+    function switchDisplayMode(mode) {
+      currentDisplayMode = mode;
+      
+      // Update button states
+      document.getElementById('desktop-view-btn').classList.toggle('active', mode === 'desktop');
+      document.getElementById('mobile-view-btn').classList.toggle('active', mode === 'mobile');
+      
+      // Update body classes
+      const body = document.body;
+      body.classList.remove('mobile-mode', 'desktop-mode', 'auto-mobile');
+      
+      if (mode === 'mobile') {
+        body.classList.add('mobile-mode');
+        // Only set absences default if user hasn't made a choice
+        if (!window.userHasSetAbsences) {
+          document.getElementById('show-absences-switch').checked = false;
+        }
+        applyFilters();
+      } else if (mode === 'desktop') {
+        body.classList.add('desktop-mode');
+        // Only set absences default if user hasn't made a choice
+        if (!window.userHasSetAbsences) {
+          document.getElementById('show-absences-switch').checked = true;
+        }
+        applyFilters();
+      } else {
+        body.classList.add('auto-mobile');
+        // Auto mode: check screen size to determine absences default
+        if (!window.userHasSetAbsences) {
+          if (window.innerWidth <= 768) {
+            document.getElementById('show-absences-switch').checked = false;
+          } else {
+            document.getElementById('show-absences-switch').checked = true;
+          }
+        }
+        applyFilters();
+      }
+    }
+    
+    // ADDED: Auto-detect mobile and switch
+    function detectMobileAndSwitch() {
+      if (window.innerWidth <= 768) {
+        // Only switch if not already in mobile mode and no manual selection made
+        if (currentDisplayMode !== 'mobile') {
+          switchDisplayMode('mobile');
+        }
+      }
+    }
+    
+    // Run on load and resize
+    window.addEventListener('load', detectMobileAndSwitch);
+    
+    // Debounce resize events to prevent rapid firing
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(detectMobileAndSwitch, 250);
+    });
+    
     // ADDED: View switching functions
     function switchView(view) {
       currentView = view;
@@ -632,8 +959,8 @@
           let visible = true;
           
           if (sportVal !== 'all' && el.dataset.sport !== sportVal) visible = false;
-          // In list view, always hide absences regardless of the switch
-          if (visible && isAbs) visible = false;
+          // Handle absences based on the switch
+          if (visible && !showAbs && isAbs) visible = false;
           if (visible && teamVal !== 'all' && el.dataset.team !== teamVal) visible = false;
           if (visible && !isAbs && typeVal !== 'all' && !el.dataset.type.includes(typeVal)) visible = false;
 
@@ -762,24 +1089,105 @@
       }
     }
 
-    // MODIFIED: applyFilters now includes sport filter logic
+    // MODIFIED: applyFilters now includes sport filter logic and handles compact view
     function applyFilters() {
       const sportVal = sportFilterSelect.value;
       const showAbs = showAbsencesSwitch.checked;
       const teamVal = teamFilterSelect.value;
       const typeVal = typeFilterSelect.value;
+      
+      console.log('=== FILTER DEBUG ===');
+      console.log('showAbs:', showAbs);
+      console.log('sportVal:', sportVal);
+      console.log('teamVal:', teamVal);
+      console.log('typeVal:', typeVal);
 
+      // Add/remove CSS class to control absence visibility
+      const body = document.body;
+      if (!showAbs) {
+        body.classList.add('hide-absences');
+      } else {
+        body.classList.remove('hide-absences');
+      }
+
+      // Filter other elements normally
+      let desktopAbsenceCount = 0;
       document.querySelectorAll('.match-container').forEach(el => {
         const matchContent = el.querySelector('.match-content');
         const isAbs = matchContent.classList.contains('absence-entry');
         let visible = true;
         
+        // Only debug first 2 absences
+        if (isAbs && desktopAbsenceCount < 2) {
+          console.log('Desktop element:', {
+            isAbs: isAbs,
+            team: matchContent.dataset.team,
+            sport: matchContent.dataset.sport,
+            type: matchContent.dataset.type
+          });
+          desktopAbsenceCount++;
+        }
+        
         if (sportVal !== 'all' && matchContent.dataset.sport !== sportVal) visible = false;
-        if (visible && !showAbs && isAbs) visible = false;
         if (visible && teamVal !== 'all' && matchContent.dataset.team !== teamVal) visible = false;
         if (visible && !isAbs && typeVal !== 'all' && !matchContent.dataset.type.includes(typeVal)) visible = false;
 
-        el.classList.toggle('d-none', !visible);
+        if (isAbs && desktopAbsenceCount <= 2) {
+          console.log('Desktop element result:', { visible, isAbs, showAbs });
+        }
+
+        if (visible) {
+          el.style.display = '';
+          el.classList.remove('d-none');
+        } else {
+          el.style.display = 'none';
+          el.classList.add('d-none');
+        }
+      });
+      
+      // Filter mobile compact view
+      let mobileAbsenceCount = 0;
+      document.querySelectorAll('.match-container-compact').forEach(el => {
+        const isAbs = el.classList.contains('absence-entry');
+        let visible = true;
+        
+        // Only debug first 2 absences
+        if (isAbs && mobileAbsenceCount < 2) {
+          console.log('Mobile element:', {
+            isAbs: isAbs,
+            team: el.dataset.team,
+            sport: el.dataset.sport,
+            type: el.dataset.type
+          });
+          mobileAbsenceCount++;
+        }
+        
+        if (sportVal !== 'all' && el.dataset.sport !== sportVal) visible = false;
+        if (visible && teamVal !== 'all' && el.dataset.team !== teamVal) visible = false;
+        if (visible && !isAbs && typeVal !== 'all' && !el.dataset.type.includes(typeVal)) visible = false;
+
+        if (isAbs && mobileAbsenceCount <= 2) {
+          console.log('Mobile element result:', { visible, isAbs, showAbs });
+        }
+
+        // Handle visibility for all elements
+        if (visible) {
+          el.style.display = '';
+          el.classList.remove('d-none');
+        } else {
+          el.style.display = 'none';
+          el.classList.add('d-none');
+        }
+      });
+      
+      // Clean up any leftover elements after filtering (this is what mobile mode does)
+      document.querySelectorAll('.match-container').forEach(el => {
+        if (el.style.display === 'none' || el.classList.contains('d-none')) {
+          const sportIndicator = el.querySelector('.sport-indicator');
+          if (sportIndicator) {
+            sportIndicator.remove();
+          }
+        }
       });
     }
 
@@ -793,6 +1201,33 @@
 
       const cont = document.getElementById('calendar-container');
       cont.innerHTML = '';
+      // Force cleanup of any leftover elements
+      cont.textContent = '';
+      
+      // Also clean up any absolutely positioned elements that might be floating
+      document.querySelectorAll('.sport-indicator, .home-away-indicator, .cup-indicator, .sport-indicator-compact, .home-away-indicator-compact, .cup-indicator-compact').forEach(el => {
+        if (el.closest('#calendar-container')) {
+          el.remove();
+        }
+      });
+      
+      // Simple cleanup - remove any leftover elements
+      document.querySelectorAll('.match-container, .match-container-compact').forEach(el => {
+        if (!el.querySelector('.match-content') && !el.textContent.trim()) {
+          el.remove();
+        }
+      });
+      
+      // Debug: Check for any leftover sport indicators
+      setTimeout(() => {
+        const leftoverIndicators = document.querySelectorAll('.sport-indicator, .sport-indicator-compact');
+        if (leftoverIndicators.length > 0) {
+          console.log('Found leftover sport indicators:', leftoverIndicators.length);
+          leftoverIndicators.forEach((el, index) => {
+            console.log(`Indicator ${index}:`, el.textContent, 'in cell:', el.closest('td')?.textContent?.trim());
+          });
+        }
+      }, 100);
       const months = [];
       for (let d = new Date(2025,8,1); d < new Date(2026,5,1); d.setMonth(d.getMonth()+1)) months.push(new Date(d));
       const weekdays = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
@@ -809,14 +1244,20 @@
           const isSpecial = specialDates.includes(key);
           const cellBg = isSpecial ? 'background:#fff9c4;' : '';
           const caption = isSpecial ? ` <small style="color:#856404">Spielsamstag</small>` : '';
-          let cell = `<td style="${cellBg}"><strong>${d}</strong>${caption}`;
+          let cell = `<td style="${cellBg}"><strong style="position: relative; z-index: 20;">${d}</strong>${caption}`;
           evs.forEach(e => {
             // MODIFIED: Added data-sport attribute
             const attrs = `data-team="${e.team}" data-type="${e.type}" data-sport="${e.sport || ''}"`;
             if (e.isPref) {
               cell += `<div class="match-container">
+                        <div class="match-content absence-entry" ${attrs}>🏖️ ${e.team} Prio ${e.priority}
                         <div class="sport-indicator">${e.sport === 'Basketball' ? 'BB' : 'VB'}</div>
-                        <div class="match-content absence-entry" ${attrs}>🏖️ ${e.team} Prio ${e.priority}</div>
+                        </div>
+                      </div>`;
+              // ADDED: Compact version for mobile
+              cell += `<div class="match-container-compact absence-entry" ${attrs} onclick="showMatchDetails(${JSON.stringify(e).replace(/"/g, '&quot;')})">
+                        🏖️ ${e.team} Prio ${e.priority}
+                        <div class="sport-indicator-compact">${e.sport === 'Basketball' ? 'BB' : 'VB'}</div>
                       </div>`;
             } else {
               let mv = e.team;
@@ -846,22 +1287,42 @@
                 homeAwayText = 'vs';
               }
               
+              const cupEmoji = getCupEmoji(e.championship);
+              if (cupEmoji) {
+                console.log('Cup emoji found:', cupEmoji, 'for championship:', e.championship);
+              }
               cell += `<div class="match-container">
-                        <div class="sport-indicator">${e.sport === 'Basketball' ? 'BB' : 'VB'}</div>
-                        <div class="home-away-indicator">${homeAwayText}</div>
                         <div class="match-content" ${attrs} style="${style}">` +
                         `${e.time ? `<div>${e.time}${e.championship ? ` (${championshipAlias[e.championship]||e.championship})` : ''}</div>` : ''}` +
                         `<div>${mv}</div>` +
                         `${e.gym ? `<div>${e.gym}</div>` : ''}` +
                         `${e.status ? `<small class="status">${e.status}</small>` : ''}` +
-                        `</div>
+                        `<div class="sport-indicator">${e.sport === 'Basketball' ? 'BB' : 'VB'}</div>
+                        <div class="home-away-indicator">${homeAwayText}</div>
+                        </div>
+                        ${cupEmoji ? `<div class="cup-indicator">${cupEmoji}</div>` : ''}
+                      </div>`;
+              
+              // ADDED: Compact version for mobile
+              const teamFullName = teamFullNames[e.team] || e.team;
+              cell += `<div class="match-container-compact-wrapper">
+                        <div class="match-container-compact" ${attrs} style="${style}" onclick="showMatchDetails(${JSON.stringify(e).replace(/"/g, '&quot;')})">
+                          ${teamFullName}
+                          <div class="sport-indicator-compact">${e.sport === 'Basketball' ? 'BB' : 'VB'}</div>
+                          <div class="home-away-indicator-compact">${homeAwayText}</div>
+                        </div>
+                        ${cupEmoji ? `<div class="cup-indicator-compact">${cupEmoji}</div>` : ''}
                       </div>`;
             }
           });
           if (reason) {
-            const bg = reason==='holiday' ? '#6c757d' : '#000';
-            const txt = reason.charAt(0).toUpperCase()+reason.slice(1);
-            cell += `<div class="closure" style="background:${bg}">${txt}</div>`;
+            const hasEvents = evs.length > 0;
+            const closureClass = hasEvents ? 'closure closure-with-events' : 'closure';
+            const title = reason.charAt(0).toUpperCase()+reason.slice(1);
+            cell += `<div class="${closureClass}" onclick="showClosureDetails('${reason.replace(/'/g, '\\\'')}')">
+                      <div class="closure-text">${title}</div>
+                      <div class="closure-emoji">🚫</div>
+                    </div>`;
           }
           cell += '</td>';
           html += cell;
@@ -870,11 +1331,177 @@
         html += '<td></td>'.repeat((7-(offset+last.getDate())%7)%7);
         html += '</tr></tbody></table>';
         cont.insertAdjacentHTML('beforeend', html);
+        
+              // Use the same logic as mobile mode - hide compact elements in desktop mode
+      document.querySelectorAll('.match-container-compact').forEach(el => {
+        el.style.display = 'none';
+        el.classList.add('d-none');
+      });
+      
+      // Show only desktop elements
+      document.querySelectorAll('.match-container').forEach(el => {
+        el.style.display = 'flex';
+        el.classList.remove('d-none');
+      });
       });
       applyFilters();
     }
 
-    document.addEventListener('DOMContentLoaded', loadData);
+    // ADDED: Modal functions
+    function showClosureDetails(reason) {
+      const modal = document.getElementById('match-modal');
+      const title = document.getElementById('modal-title');
+      const subtitle = document.getElementById('modal-subtitle');
+      const details = document.getElementById('modal-details');
+      
+      title.textContent = '🚫 Gym Closed';
+      subtitle.textContent = '';
+      details.innerHTML = `
+        <div class="modal-detail-row">
+          <div class="modal-detail-label">Reason:</div>
+          <div class="modal-detail-value">${reason}</div>
+        </div>
+      `;
+      
+      modal.style.display = 'flex';
+    }
+    
+    function showMatchDetails(match) {
+      const modal = document.getElementById('match-modal');
+      const title = document.getElementById('modal-title');
+      const subtitle = document.getElementById('modal-subtitle');
+      const details = document.getElementById('modal-details');
+      
+      if (match.isPref) {
+        title.textContent = '🏖️ Absence';
+        subtitle.textContent = `${match.team} - Priority ${match.priority}`;
+        details.innerHTML = `
+          <div class="modal-detail-row">
+            <div class="modal-detail-label">Team:</div>
+            <div class="modal-detail-value">${match.team}</div>
+          </div>
+          <div class="modal-detail-row">
+            <div class="modal-detail-label">Priority:</div>
+            <div class="modal-detail-value">${match.priority}</div>
+          </div>
+          <div class="modal-detail-row">
+            <div class="modal-detail-label">Date:</div>
+            <div class="modal-detail-value">${new Date(match.date).toLocaleDateString('en-GB', { 
+              weekday: 'long', 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            })}</div>
+          </div>
+          <div class="modal-detail-row">
+            <div class="modal-detail-label">Sport:</div>
+            <div class="modal-detail-value">${match.sport || 'Not specified'}</div>
+          </div>
+        `;
+      } else {
+        const teamFullName = teamFullNames[match.team] || match.team;
+        const opponentFullName = teamFullNames[match.opponent] || match.opponent;
+        
+        let matchTitle = '';
+        if (match.type.includes('home')) {
+          matchTitle = `${teamFullName} vs ${opponentFullName}`;
+        } else if (match.type.includes('away')) {
+          matchTitle = `${opponentFullName} vs ${teamFullName}`;
+        } else {
+          matchTitle = `${teamFullName} vs ${opponentFullName}`;
+        }
+        
+        title.textContent = matchTitle;
+        subtitle.textContent = match.championship || '';
+        
+        let detailsHtml = '';
+        if (match.time) {
+          detailsHtml += `
+            <div class="modal-detail-row">
+              <div class="modal-detail-label">Time:</div>
+              <div class="modal-detail-value">${match.time}</div>
+            </div>
+          `;
+        }
+        
+        detailsHtml += `
+          <div class="modal-detail-row">
+            <div class="modal-detail-label">Date:</div>
+            <div class="modal-detail-value">${new Date(match.date).toLocaleDateString('en-GB', { 
+              weekday: 'long', 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            })}</div>
+          </div>
+          <div class="modal-detail-row">
+            <div class="modal-detail-label">Type:</div>
+            <div class="modal-detail-value">${match.type.includes('home') ? 'Home' : match.type.includes('away') ? 'Away' : 'vs'}</div>
+          </div>
+        `;
+        
+        if (match.gym) {
+          detailsHtml += `
+            <div class="modal-detail-row">
+              <div class="modal-detail-label">Venue:</div>
+              <div class="modal-detail-value">${match.gym}</div>
+            </div>
+          `;
+        }
+        
+        if (match.status) {
+          detailsHtml += `
+            <div class="modal-detail-row">
+              <div class="modal-detail-label">Status:</div>
+              <div class="modal-detail-value">${match.status}</div>
+            </div>
+          `;
+        }
+        
+        detailsHtml += `
+          <div class="modal-detail-row">
+            <div class="modal-detail-label">Sport:</div>
+            <div class="modal-detail-value">${match.sport || 'Not specified'}</div>
+          </div>
+        `;
+        
+        details.innerHTML = detailsHtml;
+      }
+      
+      modal.style.display = 'flex';
+    }
+    
+    function closeModal() {
+      document.getElementById('match-modal').style.display = 'none';
+    }
+    
+    // Close modal when clicking outside
+    document.getElementById('match-modal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeModal();
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Initialize display mode - default to desktop
+      switchDisplayMode('desktop');
+      loadData();
+    });
+    
+
+    
+    // ADDED: Handle window resize for auto mode
+    window.addEventListener('resize', () => {
+      if (currentDisplayMode === 'auto') {
+        // Update absences visibility based on current screen size
+        const shouldShowAbsences = window.innerWidth > 768;
+        const absencesSwitch = document.getElementById('show-absences-switch');
+        if (absencesSwitch.checked !== shouldShowAbsences) {
+          absencesSwitch.checked = shouldShowAbsences;
+          applyFilters();
+        }
+      }
+    });
     // ADDED: event listener for the new sport filter
     sportFilterSelect.addEventListener('change', () => {
       if (currentView === 'calendar') {
@@ -884,6 +1511,8 @@
       }
     });
     showAbsencesSwitch.addEventListener('change', () => {
+      console.log('Show Absences toggle changed to:', showAbsencesSwitch.checked);
+      window.userHasSetAbsences = true;
       if (currentView === 'calendar') {
         applyFilters();
       } else {
