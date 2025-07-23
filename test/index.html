@@ -1106,22 +1106,29 @@
       });
       
       // Filter mobile compact view
+      let mobileAbsenceCount = 0;
       document.querySelectorAll('.match-container-compact').forEach(el => {
         const isAbs = el.classList.contains('absence-entry');
         let visible = true;
         
-        console.log('Mobile element:', {
-          isAbs: isAbs,
-          team: el.dataset.team,
-          sport: el.dataset.sport,
-          type: el.dataset.type
-        });
+        // Only debug first 2 absences
+        if (isAbs && mobileAbsenceCount < 2) {
+          console.log('Mobile element:', {
+            isAbs: isAbs,
+            team: el.dataset.team,
+            sport: el.dataset.sport,
+            type: el.dataset.type
+          });
+          mobileAbsenceCount++;
+        }
         
         if (sportVal !== 'all' && el.dataset.sport !== sportVal) visible = false;
         if (visible && teamVal !== 'all' && el.dataset.team !== teamVal) visible = false;
         if (visible && !isAbs && typeVal !== 'all' && !el.dataset.type.includes(typeVal)) visible = false;
 
-        console.log('Mobile element result:', { visible, isAbs, showAbs });
+        if (isAbs && mobileAbsenceCount <= 2) {
+          console.log('Mobile element result:', { visible, isAbs, showAbs });
+        }
 
         // Handle visibility for all elements
         if (visible) {
@@ -1144,6 +1151,26 @@
 
       const cont = document.getElementById('calendar-container');
       cont.innerHTML = '';
+      // Force cleanup of any leftover elements
+      cont.textContent = '';
+      
+      // Also clean up any absolutely positioned elements that might be floating
+      document.querySelectorAll('.sport-indicator, .home-away-indicator, .cup-indicator, .sport-indicator-compact, .home-away-indicator-compact, .cup-indicator-compact').forEach(el => {
+        if (el.closest('#calendar-container')) {
+          el.remove();
+        }
+      });
+      
+      // Debug: Check for any leftover sport indicators
+      setTimeout(() => {
+        const leftoverIndicators = document.querySelectorAll('.sport-indicator, .sport-indicator-compact');
+        if (leftoverIndicators.length > 0) {
+          console.log('Found leftover sport indicators:', leftoverIndicators.length);
+          leftoverIndicators.forEach((el, index) => {
+            console.log(`Indicator ${index}:`, el.textContent, 'in cell:', el.closest('td')?.textContent?.trim());
+          });
+        }
+      }, 100);
       const months = [];
       for (let d = new Date(2025,8,1); d < new Date(2026,5,1); d.setMonth(d.getMonth()+1)) months.push(new Date(d));
       const weekdays = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
@@ -1160,7 +1187,7 @@
           const isSpecial = specialDates.includes(key);
           const cellBg = isSpecial ? 'background:#fff9c4;' : '';
           const caption = isSpecial ? ` <small style="color:#856404">Spielsamstag</small>` : '';
-          let cell = `<td style="${cellBg}"><strong>${d}</strong>${caption}`;
+          let cell = `<td style="${cellBg}"><strong style="position: relative; z-index: 20;">${d}</strong>${caption}`;
           evs.forEach(e => {
             // MODIFIED: Added data-sport attribute
             const attrs = `data-team="${e.team}" data-type="${e.type}" data-sport="${e.sport || ''}"`;
