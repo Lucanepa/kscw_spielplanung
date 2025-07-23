@@ -92,6 +92,32 @@
       border-radius: 2px;
       z-index: 15;
     }
+    
+    /* ADDED: Cup indicators */
+    .cup-indicator {
+      position: absolute;
+      bottom: 2px;
+      right: 38px;
+      width: 16px;
+      height: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      z-index: 15;
+    }
+    .cup-indicator-compact {
+      position: absolute;
+      bottom: 2px;
+      right: 38px;
+      width: 16px;
+      height: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      z-index: 15;
+    }
     .match-content {
       flex: 1;
       padding: 4px;
@@ -101,12 +127,12 @@
       color: black;
       position: relative;
       line-height: 1.2;
-      background: rgba(255, 255, 255, 0.9);
+      background: rgba(255, 255, 255, 0.7);
       z-index: 10;
     }
     .absence-entry .match-content {
       border: 1px dotted #007bff;
-      background: rgba(255, 255, 255, 0.8);
+      background: rgba(255, 255, 255, 0.6);
     }
     
     /* MODIFIED: New compact indicator styles for mobile */
@@ -121,11 +147,11 @@
       line-height: 1.2;
       cursor: pointer;
       min-height: 40px;
-      background: rgba(255, 255, 255, 0.9);
+      background: rgba(255, 255, 255, 0.7);
       z-index: 10;
     }
     .match-container-compact.absence-entry {
-      background: rgba(255, 255, 255, 0.8);
+      background: rgba(255, 255, 255, 0.6);
       border: 1px dotted #007bff;
     }
     .match-container-compact .sport-indicator-compact {
@@ -168,9 +194,11 @@
       width: 100%; height: 100%;
       background: #000;
       display: flex;
+      flex-direction: column;
       align-items: center;
-      justify-content: center;
-      font-size: 14px;
+      justify-content: flex-start;
+      padding-top: 5px;
+      font-size: 12px;
       font-weight: bold;
       color: #ff4444;
       text-align: center;
@@ -200,6 +228,9 @@
     .mobile-mode .match {
       display: none !important;
     }
+    .mobile-mode .match-container-compact.absence-entry {
+      display: none !important;
+    }
     
     .desktop-mode .match-container-compact {
       display: none !important;
@@ -217,6 +248,9 @@
         display: block !important;
       }
       .auto-mobile .match {
+        display: none !important;
+      }
+      .auto-mobile .match-container-compact.absence-entry {
         display: none !important;
       }
     }
@@ -486,6 +520,14 @@
     let currentDisplayMode = 'auto'; // 'auto', 'desktop', 'mobile'
     let allMatches = [];
     let allClosures = [];
+    
+    // ADDED: Function to get cup emoji based on championship
+    function getCupEmoji(championship) {
+      if (!championship) return '';
+      const champ = championship.toLowerCase();
+      if (champ.includes('cup')) return '🏆';
+      return '';
+    }
 
     // ADDED: Sport filter select element
     const sportFilterSelect  = document.getElementById('sport-filter');
@@ -1107,6 +1149,7 @@
                 homeAwayText = 'vs';
               }
               
+              const cupEmoji = getCupEmoji(e.championship);
               cell += `<div class="match-container">
                         <div class="match-content" ${attrs} style="${style}">` +
                         `${e.time ? `<div>${e.time}${e.championship ? ` (${championshipAlias[e.championship]||e.championship})` : ''}</div>` : ''}` +
@@ -1115,6 +1158,7 @@
                         `${e.status ? `<small class="status">${e.status}</small>` : ''}` +
                         `<div class="sport-indicator">${e.sport === 'Basketball' ? 'BB' : 'VB'}</div>
                         <div class="home-away-indicator">${homeAwayText}</div>
+                        ${cupEmoji ? `<div class="cup-indicator">${cupEmoji}</div>` : ''}
                         </div>
                       </div>`;
               
@@ -1124,6 +1168,7 @@
                         ${teamFullName}
                         <div class="sport-indicator-compact">${e.sport === 'Basketball' ? 'BB' : 'VB'}</div>
                         <div class="home-away-indicator-compact">${homeAwayText}</div>
+                        ${cupEmoji ? `<div class="cup-indicator-compact">${cupEmoji}</div>` : ''}
                       </div>`;
             }
           });
