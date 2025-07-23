@@ -210,6 +210,15 @@
       background: #333 !important;
     }
     
+    /* ADDED: Mobile closure styling */
+    .mobile-mode .closure-text {
+      display: none;
+    }
+    .mobile-mode .closure-emoji {
+      font-size: 16px;
+      margin-top: 10px;
+    }
+    
     /* ADDED: Mobile responsive styles */
     @media (max-width: 768px) {
       .calendar th, .calendar td {
@@ -1260,6 +1269,9 @@
               }
               
               const cupEmoji = getCupEmoji(e.championship);
+              if (cupEmoji) {
+                console.log('Cup emoji found:', cupEmoji, 'for championship:', e.championship);
+              }
               cell += `<div class="match-container">
                         <div class="match-content" ${attrs} style="${style}">` +
                         `${e.time ? `<div>${e.time}${e.championship ? ` (${championshipAlias[e.championship]||e.championship})` : ''}</div>` : ''}` +
@@ -1286,7 +1298,10 @@
             const hasEvents = evs.length > 0;
             const closureClass = hasEvents ? 'closure closure-with-events' : 'closure';
             const title = reason.charAt(0).toUpperCase()+reason.slice(1);
-            cell += `<div class="${closureClass}" onclick="showClosureDetails('${reason.replace(/'/g, '\\\'')}')">🚫 ${title}</div>`;
+            cell += `<div class="${closureClass}" onclick="showClosureDetails('${reason.replace(/'/g, '\\\'')}')">
+                      <div class="closure-text">${title}</div>
+                      <div class="closure-emoji">🚫</div>
+                    </div>`;
           }
           cell += '</td>';
           html += cell;
