@@ -1171,17 +1171,9 @@
         }
       });
       
-      // Clean up any leftover match containers that might be causing the random VB labels
+      // Simple cleanup - remove any leftover elements
       document.querySelectorAll('.match-container, .match-container-compact').forEach(el => {
-        if (el.closest('#calendar-container') && !el.querySelector('.match-content') && !el.textContent.trim()) {
-          el.remove();
-        }
-      });
-      
-      // Force cleanup of any empty containers that might have sport indicators
-      document.querySelectorAll('.match-container').forEach(el => {
-        const hasContent = el.querySelector('.match-content') || el.textContent.trim();
-        if (!hasContent) {
+        if (!el.querySelector('.match-content') && !el.textContent.trim()) {
           el.remove();
         }
       });
@@ -1195,18 +1187,6 @@
             console.log(`Indicator ${index}:`, el.textContent, 'in cell:', el.closest('td')?.textContent?.trim());
           });
         }
-        
-        // Also check for any sport indicators in cells that should be empty
-        document.querySelectorAll('td').forEach(td => {
-          const cellText = td.textContent.trim();
-          if (cellText.includes('SEASON NOT STARTED YET') || cellText.match(/^\d+$/)) {
-            const indicators = td.querySelectorAll('.sport-indicator, .sport-indicator-compact');
-            if (indicators.length > 0) {
-              console.log('Found sport indicators in empty/season cells:', indicators.length);
-              indicators.forEach(el => el.remove());
-            }
-          }
-        });
       }, 100);
       const months = [];
       for (let d = new Date(2025,8,1); d < new Date(2026,5,1); d.setMonth(d.getMonth()+1)) months.push(new Date(d));
@@ -1303,14 +1283,17 @@
         html += '</tr></tbody></table>';
         cont.insertAdjacentHTML('beforeend', html);
         
-        // Immediately clean up any sport indicators in empty cells
-        document.querySelectorAll('td').forEach(td => {
-          const cellText = td.textContent.trim();
-          if (cellText.includes('SEASON NOT STARTED YET') || (cellText.match(/^\d+$/) && !td.querySelector('.match-container'))) {
-            const indicators = td.querySelectorAll('.sport-indicator, .sport-indicator-compact');
-            indicators.forEach(el => el.remove());
-          }
-        });
+              // Use the same logic as mobile mode - hide compact elements in desktop mode
+      document.querySelectorAll('.match-container-compact').forEach(el => {
+        el.style.display = 'none';
+        el.classList.add('d-none');
+      });
+      
+      // Show only desktop elements
+      document.querySelectorAll('.match-container').forEach(el => {
+        el.style.display = 'flex';
+        el.classList.remove('d-none');
+      });
       });
       applyFilters();
     }
