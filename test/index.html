@@ -607,21 +607,27 @@
       
       if (mode === 'mobile') {
         body.classList.add('mobile-mode');
-        // Hide absences by default in mobile mode
-        document.getElementById('show-absences-switch').checked = false;
+        // Only set absences default if user hasn't made a choice
+        if (!window.userHasSetAbsences) {
+          document.getElementById('show-absences-switch').checked = false;
+        }
         applyFilters();
       } else if (mode === 'desktop') {
         body.classList.add('desktop-mode');
-        // Show absences by default in desktop mode
-        document.getElementById('show-absences-switch').checked = true;
+        // Only set absences default if user hasn't made a choice
+        if (!window.userHasSetAbsences) {
+          document.getElementById('show-absences-switch').checked = true;
+        }
         applyFilters();
       } else {
         body.classList.add('auto-mobile');
         // Auto mode: check screen size to determine absences default
-        if (window.innerWidth <= 768) {
-          document.getElementById('show-absences-switch').checked = false;
-        } else {
-          document.getElementById('show-absences-switch').checked = true;
+        if (!window.userHasSetAbsences) {
+          if (window.innerWidth <= 768) {
+            document.getElementById('show-absences-switch').checked = false;
+          } else {
+            document.getElementById('show-absences-switch').checked = true;
+          }
         }
         applyFilters();
       }
@@ -630,13 +636,22 @@
     // ADDED: Auto-detect mobile and switch
     function detectMobileAndSwitch() {
       if (window.innerWidth <= 768) {
-        switchDisplayMode('mobile');
+        // Only switch if not already in mobile mode and no manual selection made
+        if (currentDisplayMode !== 'mobile') {
+          switchDisplayMode('mobile');
+        }
       }
     }
     
     // Run on load and resize
     window.addEventListener('load', detectMobileAndSwitch);
-    window.addEventListener('resize', detectMobileAndSwitch);
+    
+    // Debounce resize events to prevent rapid firing
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(detectMobileAndSwitch, 250);
+    });
     
     // ADDED: View switching functions
     function switchView(view) {
@@ -1497,6 +1512,7 @@
     });
     showAbsencesSwitch.addEventListener('change', () => {
       console.log('Show Absences toggle changed to:', showAbsencesSwitch.checked);
+      window.userHasSetAbsences = true;
       if (currentView === 'calendar') {
         applyFilters();
       } else {
