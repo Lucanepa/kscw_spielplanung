@@ -228,9 +228,7 @@
     .mobile-mode .match {
       display: none !important;
     }
-    .mobile-mode .match-container-compact.absence-entry {
-      display: none !important;
-    }
+    /* Removed the hardcoded absence hiding - will be handled by JavaScript */
     
     .desktop-mode .match-container-compact {
       display: none !important;
@@ -250,9 +248,7 @@
       .auto-mobile .match {
         display: none !important;
       }
-      .auto-mobile .match-container-compact.absence-entry {
-        display: none !important;
-      }
+      /* Removed the hardcoded absence hiding - will be handled by JavaScript */
     }
     
     @media (min-width: 769px) {
@@ -1053,6 +1049,8 @@
       const showAbs = showAbsencesSwitch.checked;
       const teamVal = teamFilterSelect.value;
       const typeVal = typeFilterSelect.value;
+      
+      console.log('Applying filters:', { sportVal, showAbs, teamVal, typeVal });
 
       // Filter desktop view
       document.querySelectorAll('.match-container').forEach(el => {
@@ -1078,13 +1076,13 @@
         if (visible && teamVal !== 'all' && el.dataset.team !== teamVal) visible = false;
         if (visible && !isAbs && typeVal !== 'all' && !el.dataset.type.includes(typeVal)) visible = false;
 
-        // Override the CSS display:none for absences when showAbs is true
-        if (isAbs && showAbs) {
-          el.style.display = 'block';
-        } else if (isAbs && !showAbs) {
+        // Handle visibility for all elements
+        if (visible) {
+          el.style.display = '';
+          el.classList.remove('d-none');
+        } else {
           el.style.display = 'none';
-        } else if (!isAbs) {
-          el.classList.toggle('d-none', !visible);
+          el.classList.add('d-none');
         }
       });
     }
@@ -1319,6 +1317,8 @@
       switchDisplayMode('auto');
       loadData();
     });
+    
+
     
     // ADDED: Handle window resize for auto mode
     window.addEventListener('resize', () => {
