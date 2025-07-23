@@ -151,6 +151,35 @@
       border-radius: 2px;
     }
     
+    /* ADDED: Closure styles */
+    .closure {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: #000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: white;
+      z-index: 5;
+    }
+    .closure-title {
+      font-weight: bold;
+      color: #ff4444;
+      font-size: 11px;
+      margin-bottom: 2px;
+      text-align: center;
+    }
+    .closure-reason {
+      font-size: 10px;
+      text-align: center;
+    }
+    .closure-with-events {
+      background: #333 !important;
+    }
+    
     /* ADDED: Mobile responsive styles */
     @media (max-width: 768px) {
       .calendar th, .calendar td {
@@ -1098,9 +1127,13 @@
             }
           });
           if (reason) {
-            const bg = reason==='holiday' ? '#6c757d' : '#000';
-            const txt = reason.charAt(0).toUpperCase()+reason.slice(1);
-            cell += `<div class="closure" style="background:${bg}">${txt}</div>`;
+            const hasEvents = evs.length > 0;
+            const closureClass = hasEvents ? 'closure closure-with-events' : 'closure';
+            const title = reason.charAt(0).toUpperCase()+reason.slice(1);
+            cell += `<div class="${closureClass}">
+                      <div class="closure-title">${title}</div>
+                      <div class="closure-reason">${reason}</div>
+                    </div>`;
           }
           cell += '</td>';
           html += cell;
