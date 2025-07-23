@@ -1049,8 +1049,6 @@
       const showAbs = showAbsencesSwitch.checked;
       const teamVal = teamFilterSelect.value;
       const typeVal = typeFilterSelect.value;
-      
-      console.log('Applying filters:', { sportVal, showAbs, teamVal, typeVal });
 
       // Filter desktop view
       document.querySelectorAll('.match-container').forEach(el => {
@@ -1063,7 +1061,13 @@
         if (visible && teamVal !== 'all' && matchContent.dataset.team !== teamVal) visible = false;
         if (visible && !isAbs && typeVal !== 'all' && !matchContent.dataset.type.includes(typeVal)) visible = false;
 
-        el.classList.toggle('d-none', !visible);
+        if (visible) {
+          el.style.display = '';
+          el.classList.remove('d-none');
+        } else {
+          el.style.display = 'none';
+          el.classList.add('d-none');
+        }
       });
       
       // Filter mobile compact view
@@ -1313,8 +1317,8 @@
     });
 
     document.addEventListener('DOMContentLoaded', () => {
-      // Initialize display mode
-      switchDisplayMode('auto');
+      // Initialize display mode - default to desktop
+      switchDisplayMode('desktop');
       loadData();
     });
     
