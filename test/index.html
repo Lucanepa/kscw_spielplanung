@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
   <title>Team Matches Calendar</title>
   <link 
     href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" 
@@ -53,7 +53,7 @@
       color: #555;
       font-size: 9px;
     }
-    /* ADDED: Sport indicator styles */
+    /* MODIFIED: Sport indicator styles - indicators now positioned at bottom right */
     .match-container {
       display: flex;
       align-items: stretch;
@@ -61,32 +61,42 @@
       position: relative;
     }
     .sport-indicator {
-      width: 20px;
+      position: absolute;
+      bottom: 2px;
+      right: 2px;
+      width: 16px;
+      height: 16px;
       background: #333;
       color: white;
-      font-size: 9px;
+      font-size: 8px;
       font-weight: bold;
       display: flex;
       align-items: center;
       justify-content: center;
-      border-radius: 3px 0 0 3px;
-      flex-shrink: 0;
+      border-radius: 2px;
+      z-index: 10;
     }
     .home-away-indicator {
-      width: 20px;
+      position: absolute;
+      bottom: 2px;
+      right: 20px;
+      width: 16px;
+      height: 16px;
       background: #007bff;
       color: white;
-      font-size: 9px;
+      font-size: 8px;
       font-weight: bold;
       display: flex;
       align-items: center;
       justify-content: center;
-      flex-shrink: 0;
+      border-radius: 2px;
+      z-index: 10;
     }
     .match-content {
       flex: 1;
       padding: 4px;
-      border-radius: 0 3px 3px 0;
+      padding-bottom: 20px; /* Add space for indicators */
+      border-radius: 3px;
       font-size: 11px;
       color: black;
       position: relative;
@@ -102,6 +112,7 @@
       position: relative;
       margin: 2px 0;
       padding: 4px;
+      padding-bottom: 20px; /* Add space for indicators */
       border-radius: 3px;
       font-size: 11px;
       color: black;
@@ -147,23 +158,45 @@
         font-size: 10px;
         padding: 2px;
       }
-      .match-container {
-        display: none;
+    }
+    
+    /* ADDED: Manual display mode classes */
+    .mobile-mode .match-container {
+      display: none !important;
+    }
+    .mobile-mode .match-container-compact {
+      display: block !important;
+    }
+    .mobile-mode .match {
+      display: none !important;
+    }
+    
+    .desktop-mode .match-container-compact {
+      display: none !important;
+    }
+    .desktop-mode .match-container {
+      display: flex !important;
+    }
+    
+    /* ADDED: Mobile responsive styles (automatic) */
+    @media (max-width: 768px) {
+      .auto-mobile .match-container {
+        display: none !important;
       }
-      .match-container-compact {
-        display: block;
+      .auto-mobile .match-container-compact {
+        display: block !important;
       }
-      .match {
-        display: none;
+      .auto-mobile .match {
+        display: none !important;
       }
     }
     
     @media (min-width: 769px) {
-      .match-container-compact {
-        display: none;
+      .auto-mobile .match-container-compact {
+        display: none !important;
       }
-      .match-container {
-        display: flex;
+      .auto-mobile .match-container {
+        display: flex !important;
       }
     }
     
@@ -331,9 +364,15 @@
 </head>
 <body>
   <div class="controls-header">
-    <h4>📅 Team Matches Planning</h4>
+    <h4 id="page-title">📅 Team Matches Planning</h4>
     <div class="d-flex flex-wrap align-items-center gap-3 mt-2">
       <button class="btn btn-primary" onclick="loadData()">🔄 Refresh</button>
+
+      <!-- ADDED: Mobile/Desktop view toggle -->
+      <div class="view-toggle-group">
+        <button class="btn btn-outline-secondary active" id="desktop-view-btn" onclick="switchDisplayMode('desktop')">🖥️ Desktop</button>
+        <button class="btn btn-outline-secondary" id="mobile-view-btn" onclick="switchDisplayMode('mobile')">📱 Mobile</button>
+      </div>
 
       <!-- ADDED: View toggle buttons -->
       <div class="view-toggle-group">
@@ -414,6 +453,7 @@
     // ADDED: Global variables for view state
     let currentView = 'calendar';
     let currentListOrg = 'day';
+    let currentDisplayMode = 'auto'; // 'auto', 'desktop', 'mobile'
     let allMatches = [];
     let allClosures = [];
 
@@ -464,6 +504,40 @@
         .forEach(team => teamFilterSelect.append(new Option(team, team)));
     }
 
+    // ADDED: Display mode switching function
+    function switchDisplayMode(mode) {
+      currentDisplayMode = mode;
+      
+      // Update button states
+      document.getElementById('desktop-view-btn').classList.toggle('active', mode === 'desktop');
+      document.getElementById('mobile-view-btn').classList.toggle('active', mode === 'mobile');
+      
+      // Update body classes
+      const body = document.body;
+      body.classList.remove('mobile-mode', 'desktop-mode', 'auto-mobile');
+      
+      if (mode === 'mobile') {
+        body.classList.add('mobile-mode');
+        // Hide absences by default in mobile mode
+        document.getElementById('show-absences-switch').checked = false;
+        applyFilters();
+      } else if (mode === 'desktop') {
+        body.classList.add('desktop-mode');
+        // Show absences by default in desktop mode
+        document.getElementById('show-absences-switch').checked = true;
+        applyFilters();
+      } else {
+        body.classList.add('auto-mobile');
+        // Auto mode: check screen size to determine absences default
+        if (window.innerWidth <= 768) {
+          document.getElementById('show-absences-switch').checked = false;
+        } else {
+          document.getElementById('show-absences-switch').checked = true;
+        }
+        applyFilters();
+      }
+    }
+    
     // ADDED: View switching functions
     function switchView(view) {
       currentView = view;
@@ -1004,14 +1078,14 @@
               }
               
               cell += `<div class="match-container">
-                        <div class="sport-indicator">${e.sport === 'Basketball' ? 'BB' : 'VB'}</div>
-                        <div class="home-away-indicator">${homeAwayText}</div>
                         <div class="match-content" ${attrs} style="${style}">` +
                         `${e.time ? `<div>${e.time}${e.championship ? ` (${championshipAlias[e.championship]||e.championship})` : ''}</div>` : ''}` +
                         `<div>${mv}</div>` +
                         `${e.gym ? `<div>${e.gym}</div>` : ''}` +
                         `${e.status ? `<small class="status">${e.status}</small>` : ''}` +
-                        `</div>
+                        `<div class="sport-indicator">${e.sport === 'Basketball' ? 'BB' : 'VB'}</div>
+                        <div class="home-away-indicator">${homeAwayText}</div>
+                        </div>
                       </div>`;
               
               // ADDED: Compact version for mobile
@@ -1156,7 +1230,24 @@
       }
     });
 
-    document.addEventListener('DOMContentLoaded', loadData);
+    document.addEventListener('DOMContentLoaded', () => {
+      // Initialize display mode
+      switchDisplayMode('auto');
+      loadData();
+    });
+    
+    // ADDED: Handle window resize for auto mode
+    window.addEventListener('resize', () => {
+      if (currentDisplayMode === 'auto') {
+        // Update absences visibility based on current screen size
+        const shouldShowAbsences = window.innerWidth > 768;
+        const absencesSwitch = document.getElementById('show-absences-switch');
+        if (absencesSwitch.checked !== shouldShowAbsences) {
+          absencesSwitch.checked = shouldShowAbsences;
+          applyFilters();
+        }
+      }
+    });
     // ADDED: event listener for the new sport filter
     sportFilterSelect.addEventListener('change', () => {
       if (currentView === 'calendar') {
