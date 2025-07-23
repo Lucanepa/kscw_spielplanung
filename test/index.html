@@ -1049,6 +1049,12 @@
       const showAbs = showAbsencesSwitch.checked;
       const teamVal = teamFilterSelect.value;
       const typeVal = typeFilterSelect.value;
+      
+      console.log('=== FILTER DEBUG ===');
+      console.log('showAbs:', showAbs);
+      console.log('sportVal:', sportVal);
+      console.log('teamVal:', teamVal);
+      console.log('typeVal:', typeVal);
 
       // Filter desktop view
       document.querySelectorAll('.match-container').forEach(el => {
@@ -1056,10 +1062,19 @@
         const isAbs = matchContent.classList.contains('absence-entry');
         let visible = true;
         
+        console.log('Desktop element:', {
+          isAbs: isAbs,
+          team: matchContent.dataset.team,
+          sport: matchContent.dataset.sport,
+          type: matchContent.dataset.type
+        });
+        
         if (sportVal !== 'all' && matchContent.dataset.sport !== sportVal) visible = false;
         if (visible && !showAbs && isAbs) visible = false;
         if (visible && teamVal !== 'all' && matchContent.dataset.team !== teamVal) visible = false;
         if (visible && !isAbs && typeVal !== 'all' && !matchContent.dataset.type.includes(typeVal)) visible = false;
+
+        console.log('Desktop element result:', { visible, isAbs, showAbs });
 
         if (visible) {
           el.style.display = '';
@@ -1075,10 +1090,19 @@
         const isAbs = el.classList.contains('absence-entry');
         let visible = true;
         
+        console.log('Mobile element:', {
+          isAbs: isAbs,
+          team: el.dataset.team,
+          sport: el.dataset.sport,
+          type: el.dataset.type
+        });
+        
         if (sportVal !== 'all' && el.dataset.sport !== sportVal) visible = false;
         if (visible && !showAbs && isAbs) visible = false;
         if (visible && teamVal !== 'all' && el.dataset.team !== teamVal) visible = false;
         if (visible && !isAbs && typeVal !== 'all' && !el.dataset.type.includes(typeVal)) visible = false;
+
+        console.log('Mobile element result:', { visible, isAbs, showAbs });
 
         // Handle visibility for all elements
         if (visible) {
@@ -1345,6 +1369,7 @@
       }
     });
     showAbsencesSwitch.addEventListener('change', () => {
+      console.log('Show Absences toggle changed to:', showAbsencesSwitch.checked);
       if (currentView === 'calendar') {
         applyFilters();
       } else {
