@@ -106,6 +106,10 @@
       font-size: 12px;
       z-index: 15;
     }
+    .match-container-compact-wrapper {
+      position: relative;
+      margin: 2px 0;
+    }
     .cup-indicator-compact {
       position: absolute;
       bottom: 2px;
@@ -1280,16 +1284,18 @@
                         `${e.status ? `<small class="status">${e.status}</small>` : ''}` +
                         `<div class="sport-indicator">${e.sport === 'Basketball' ? 'BB' : 'VB'}</div>
                         <div class="home-away-indicator">${homeAwayText}</div>
-                        ${cupEmoji ? `<div class="cup-indicator">${cupEmoji}</div>` : ''}
                         </div>
+                        ${cupEmoji ? `<div class="cup-indicator">${cupEmoji}</div>` : ''}
                       </div>`;
               
               // ADDED: Compact version for mobile
               const teamFullName = teamFullNames[e.team] || e.team;
-              cell += `<div class="match-container-compact" ${attrs} style="${style}" onclick="showMatchDetails(${JSON.stringify(e).replace(/"/g, '&quot;')})">
-                        ${teamFullName}
-                        <div class="sport-indicator-compact">${e.sport === 'Basketball' ? 'BB' : 'VB'}</div>
-                        <div class="home-away-indicator-compact">${homeAwayText}</div>
+              cell += `<div class="match-container-compact-wrapper">
+                        <div class="match-container-compact" ${attrs} style="${style}" onclick="showMatchDetails(${JSON.stringify(e).replace(/"/g, '&quot;')})">
+                          ${teamFullName}
+                          <div class="sport-indicator-compact">${e.sport === 'Basketball' ? 'BB' : 'VB'}</div>
+                          <div class="home-away-indicator-compact">${homeAwayText}</div>
+                        </div>
                         ${cupEmoji ? `<div class="cup-indicator-compact">${cupEmoji}</div>` : ''}
                       </div>`;
             }
