@@ -1210,8 +1210,9 @@
             const attrs = `data-team="${e.team}" data-type="${e.type}" data-sport="${e.sport || ''}"`;
             if (e.isPref) {
               cell += `<div class="match-container">
+                        <div class="match-content absence-entry" ${attrs}>🏖️ ${e.team} Prio ${e.priority}
                         <div class="sport-indicator">${e.sport === 'Basketball' ? 'BB' : 'VB'}</div>
-                        <div class="match-content absence-entry" ${attrs}>🏖️ ${e.team} Prio ${e.priority}</div>
+                        </div>
                       </div>`;
               // ADDED: Compact version for mobile
               cell += `<div class="match-container-compact absence-entry" ${attrs} onclick="showMatchDetails(${JSON.stringify(e).replace(/"/g, '&quot;')})">
