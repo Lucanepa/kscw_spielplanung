@@ -633,7 +633,7 @@
       }
     }
     
-    // ADDED: Auto-detect mobile and switch
+    // ADDED: Auto-detect mobile and switch on resize only
     function detectMobileAndSwitch() {
       if (window.innerWidth <= 768) {
         // Only switch if not already in mobile mode and no manual selection made
@@ -642,9 +642,6 @@
         }
       }
     }
-    
-    // Run on load and resize
-    window.addEventListener('load', detectMobileAndSwitch);
     
     // Debounce resize events to prevent rapid firing
     let resizeTimeout;
@@ -1333,7 +1330,13 @@
         cont.insertAdjacentHTML('beforeend', html);
         
         // Handle display mode - show/hide appropriate elements based on current mode
-        if (currentDisplayMode === 'mobile') {
+        let effectiveMode = currentDisplayMode;
+        if (currentDisplayMode === 'auto') {
+          // In auto mode, determine based on screen size
+          effectiveMode = window.innerWidth <= 768 ? 'mobile' : 'desktop';
+        }
+        
+        if (effectiveMode === 'mobile') {
           // In mobile mode: hide desktop elements, show compact elements
           document.querySelectorAll('.match-container').forEach(el => {
             el.style.display = 'none';
@@ -1494,8 +1497,9 @@
     });
 
     document.addEventListener('DOMContentLoaded', () => {
-      // Initialize display mode - default to desktop
-      switchDisplayMode('desktop');
+      // Initialize display mode based on screen size
+      const isMobile = window.innerWidth <= 768;
+      switchDisplayMode(isMobile ? 'mobile' : 'desktop');
       loadData();
     });
     
