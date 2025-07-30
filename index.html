@@ -611,14 +611,12 @@
         if (!window.userHasSetAbsences) {
           document.getElementById('show-absences-switch').checked = false;
         }
-        applyFilters();
       } else if (mode === 'desktop') {
         body.classList.add('desktop-mode');
         // Only set absences default if user hasn't made a choice
         if (!window.userHasSetAbsences) {
           document.getElementById('show-absences-switch').checked = true;
         }
-        applyFilters();
       } else {
         body.classList.add('auto-mobile');
         // Auto mode: check screen size to determine absences default
@@ -629,7 +627,6 @@
             document.getElementById('show-absences-switch').checked = true;
           }
         }
-        applyFilters();
       }
     }
     
@@ -1133,9 +1130,19 @@
           console.log('Desktop element result:', { visible, isAbs, showAbs });
         }
 
+        // Handle visibility for all elements - respect current display mode
         if (visible) {
-          el.style.display = '';
-          el.classList.remove('d-none');
+          // Check if we're in desktop mode
+          const isDesktopMode = document.body.classList.contains('desktop-mode') || 
+                               (document.body.classList.contains('auto-mobile') && window.innerWidth > 768);
+          
+          if (isDesktopMode) {
+            el.style.display = 'flex';
+            el.classList.remove('d-none');
+          } else {
+            el.style.display = 'none';
+            el.classList.add('d-none');
+          }
         } else {
           el.style.display = 'none';
           el.classList.add('d-none');
@@ -1167,10 +1174,19 @@
           console.log('Mobile element result:', { visible, isAbs, showAbs });
         }
 
-        // Handle visibility for all elements
+        // Handle visibility for all elements - respect current display mode
         if (visible) {
-          el.style.display = '';
-          el.classList.remove('d-none');
+          // Check if we're in mobile mode
+          const isMobileMode = document.body.classList.contains('mobile-mode') || 
+                              (document.body.classList.contains('auto-mobile') && window.innerWidth <= 768);
+          
+          if (isMobileMode) {
+            el.style.display = 'flex';
+            el.classList.remove('d-none');
+          } else {
+            el.style.display = 'none';
+            el.classList.add('d-none');
+          }
         } else {
           el.style.display = 'none';
           el.classList.add('d-none');
@@ -1358,6 +1374,8 @@
           });
         }
       });
+      
+      // Apply filters after display mode is set
       applyFilters();
     }
 
@@ -1513,7 +1531,10 @@
         const absencesSwitch = document.getElementById('show-absences-switch');
         if (absencesSwitch.checked !== shouldShowAbsences) {
           absencesSwitch.checked = shouldShowAbsences;
-          applyFilters();
+          // Only apply filters if calendar is rendered
+          if (currentView === 'calendar') {
+            applyFilters();
+          }
         }
       }
     });
