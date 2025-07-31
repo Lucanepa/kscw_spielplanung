@@ -1095,6 +1095,8 @@
       console.log('sportVal:', sportVal);
       console.log('teamVal:', teamVal);
       console.log('typeVal:', typeVal);
+      console.log('currentDisplayMode:', currentDisplayMode);
+      console.log('body classes:', document.body.className);
 
       // Add/remove CSS class to control absence visibility
       const body = document.body;
@@ -1151,9 +1153,22 @@
       
       // Filter mobile compact view
       let mobileAbsenceCount = 0;
+      console.log('Filtering mobile elements, count:', document.querySelectorAll('.match-container-compact').length);
       document.querySelectorAll('.match-container-compact').forEach(el => {
         const isAbs = el.classList.contains('absence-entry');
         let visible = true;
+        
+        // Debug VB elements specifically
+        if (el.dataset.sport === 'Volleyball') {
+          console.log('VB element found:', {
+            isAbs: isAbs,
+            team: el.dataset.team,
+            sport: el.dataset.sport,
+            type: el.dataset.type,
+            currentDisplay: el.style.display,
+            hasDNone: el.classList.contains('d-none')
+          });
+        }
         
         // Only debug first 2 absences
         if (isAbs && mobileAbsenceCount < 2) {
@@ -1170,6 +1185,16 @@
         if (visible && teamVal !== 'all' && el.dataset.team !== teamVal) visible = false;
         if (visible && !isAbs && typeVal !== 'all' && !el.dataset.type.includes(typeVal)) visible = false;
 
+        // Debug VB elements after filter logic
+        if (el.dataset.sport === 'Volleyball') {
+          console.log('VB element after filter logic:', { 
+            visible, 
+            sportVal, 
+            elSport: el.dataset.sport,
+            sportMatch: sportVal === 'all' || el.dataset.sport === sportVal
+          });
+        }
+
         if (isAbs && mobileAbsenceCount <= 2) {
           console.log('Mobile element result:', { visible, isAbs, showAbs });
         }
@@ -1179,6 +1204,17 @@
           // Check if we're in mobile mode
           const isMobileMode = document.body.classList.contains('mobile-mode') || 
                               (document.body.classList.contains('auto-mobile') && window.innerWidth <= 768);
+          
+          // Debug VB elements display logic
+          if (el.dataset.sport === 'Volleyball') {
+            console.log('VB element display logic:', {
+              visible,
+              isMobileMode,
+              bodyClasses: document.body.className,
+              windowWidth: window.innerWidth,
+              willShow: isMobileMode
+            });
+          }
           
           if (isMobileMode) {
             el.style.display = 'flex';
@@ -1517,7 +1553,9 @@
     document.addEventListener('DOMContentLoaded', () => {
       // Initialize display mode based on screen size
       const isMobile = window.innerWidth <= 768;
+      console.log('DOMContentLoaded - Screen width:', window.innerWidth, 'isMobile:', isMobile);
       switchDisplayMode(isMobile ? 'mobile' : 'desktop');
+      console.log('Initial display mode set to:', currentDisplayMode);
       loadData();
     });
     
