@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-  <title>Team Matches Calendar</title>
+  <title>Team Matches Calendar - Debug</title>
   <link 
     href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" 
     rel="stylesheet"
@@ -53,7 +52,6 @@
       color: #555;
       font-size: 9px;
     }
-    /* MODIFIED: Sport indicator styles - indicators now positioned at bottom right */
     .match-container {
       display: flex;
       align-items: stretch;
@@ -92,25 +90,7 @@
       border-radius: 2px;
       z-index: 15;
     }
-    
-    /* ADDED: Cup indicators */
     .cup-indicator {
-      position: absolute;
-      bottom: 2px;
-      right: 38px;
-      width: 16px;
-      height: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
-      z-index: 15;
-    }
-    .match-container-compact-wrapper {
-      position: relative;
-      margin: 2px 0;
-    }
-    .cup-indicator-compact {
       position: absolute;
       bottom: 2px;
       right: 38px;
@@ -125,7 +105,7 @@
     .match-content {
       flex: 1;
       padding: 4px;
-      padding-bottom: 20px; /* Add space for indicators */
+      padding-bottom: 20px;
       border-radius: 3px;
       font-size: 11px;
       color: black;
@@ -139,14 +119,13 @@
       background: rgba(255, 255, 255, 0.6);
     }
     
-    /* MODIFIED: New compact indicator styles for mobile */
     .match-container-compact {
       position: relative;
       margin: 2px 0;
       padding: 4px;
-      padding-bottom: 20px; /* Add space for indicators */
+      padding-bottom: 20px;
       border-radius: 3px;
-      font-size: 9px; /* Smaller text for mobile */
+      font-size: 9px;
       color: black;
       line-height: 1.2;
       cursor: pointer;
@@ -191,7 +170,6 @@
       z-index: 15;
     }
     
-    /* ADDED: Closure styles */
     .closure {
       position: absolute;
       top: 0; left: 0;
@@ -214,16 +192,7 @@
       background: #333 !important;
     }
     
-    /* ADDED: Mobile closure styling */
-    .mobile-mode .closure-text {
-      display: none;
-    }
-    .mobile-mode .closure-emoji {
-      font-size: 16px;
-      margin-top: 10px;
-    }
-    
-    /* ADDED: Mobile responsive styles */
+    /* Mobile responsive styles */
     @media (max-width: 768px) {
       .calendar th, .calendar td {
         height: 60px;
@@ -232,7 +201,7 @@
       }
     }
     
-    /* ADDED: Manual display mode classes */
+    /* Display mode classes */
     .mobile-mode .match-container {
       display: none !important;
     }
@@ -242,9 +211,7 @@
     .mobile-mode .match {
       display: none !important;
     }
-    /* Removed the hardcoded absence hiding - will be handled by JavaScript */
     
-    /* ADDED: Force hide absences when toggle is off */
     .hide-absences .match-container .match-content.absence-entry,
     .hide-absences .match-container-compact.absence-entry {
       display: none !important;
@@ -257,7 +224,6 @@
       display: flex !important;
     }
     
-    /* ADDED: Mobile responsive styles (automatic) */
     @media (max-width: 768px) {
       .auto-mobile .match-container {
         display: none !important;
@@ -268,7 +234,6 @@
       .auto-mobile .match {
         display: none !important;
       }
-      /* Removed the hardcoded absence hiding - will be handled by JavaScript */
     }
     
     @media (min-width: 769px) {
@@ -280,7 +245,7 @@
       }
     }
     
-    /* ADDED: Popup modal styles */
+    /* Modal styles */
     .modal-overlay {
       position: fixed;
       top: 0;
@@ -346,7 +311,7 @@
       flex: 1;
     }
     
-    /* ADDED: List view styles */
+    /* List view styles */
     .list-view {
       padding: 0 20px 20px;
     }
@@ -444,29 +409,25 @@
 </head>
 <body>
   <div class="controls-header">
-    <h4 id="page-title">📅 Team Matches Planning</h4>
+    <h4 id="page-title">📅 Team Matches Planning - DEBUG</h4>
     <div class="d-flex flex-wrap align-items-center gap-3 mt-2">
       <button class="btn btn-primary" onclick="loadData()">🔄 Refresh</button>
 
-      <!-- ADDED: Mobile/Desktop view toggle -->
       <div class="view-toggle-group">
         <button class="btn btn-outline-secondary active" id="desktop-view-btn" onclick="switchDisplayMode('desktop')" title="Desktop View">🖥️</button>
         <button class="btn btn-outline-secondary" id="mobile-view-btn" onclick="switchDisplayMode('mobile')" title="Mobile View">📱</button>
       </div>
 
-      <!-- ADDED: View toggle buttons -->
       <div class="view-toggle-group">
         <button class="btn btn-outline-primary active" id="calendar-view-btn" onclick="switchView('calendar')">📅 Calendar</button>
         <button class="btn btn-outline-primary" id="list-view-btn" onclick="switchView('list')">📋 List</button>
       </div>
 
-      <!-- ADDED: List organization toggle (only visible in list view) -->
       <div class="view-toggle-group" id="list-org-toggle" style="display: none;">
         <button class="btn btn-outline-secondary active" id="per-day-btn" onclick="switchListOrg('day')">📅 Per Day</button>
         <button class="btn btn-outline-secondary" id="per-team-btn" onclick="switchListOrg('team')">👥 Per Team</button>
       </div>
 
-      <!-- ADDED: Sport filter -->
       <select id="sport-filter" class="form-select form-select-sm" style="width:auto;">
         <option value="all">All Sports</option>
         <option value="Volleyball">Volleyball</option>
@@ -493,7 +454,6 @@
   <div id="calendar-container" class="calendar-container"></div>
   <div id="list-container" class="list-view" style="display: none;"></div>
 
-  <!-- ADDED: Modal for mobile match details -->
   <div id="match-modal" class="modal-overlay">
     <div class="modal-content">
       <button class="modal-close" onclick="closeModal()">&times;</button>
@@ -506,6 +466,10 @@
   </div>
 
   <script>
+    // Clear console first
+    console.clear();
+    console.log('=== FILTER DEBUG START ===');
+    
     // === CONFIG ===
     const SPREADSHEET_ID = '16hr2bshVSHoQGZ73xGZiJpnhlBwu6Mn3I5YC4Z-ixXY';
     const API_KEY = 'AIzaSyB4tX_WxrFRajdEdqVI-yTWV0uRNqJQkfc';
@@ -513,7 +477,6 @@
 
     const specialDates = ['2025-09-27','2025-11-01','2026-01-31','2026-03-07'];
 
-    // MODIFIED: Remove hardcoded team colors - will be loaded from sheet
     const teamColor = {};
 
     const championshipAlias = {
@@ -530,14 +493,14 @@
       'Herren 4. Liga Gruppe A':'H4L A'
     };
 
-    // ADDED: Global variables for view state
+    // Global variables
     let currentView = 'calendar';
     let currentListOrg = 'day';
-    let currentDisplayMode = 'auto'; // 'auto', 'desktop', 'mobile'
+    let currentDisplayMode = 'auto';
     let allMatches = [];
     let allClosures = [];
-    
-    // ADDED: Function to get cup emoji based on championship
+    let teamFullNames = {};
+
     function getCupEmoji(championship) {
       if (!championship) return '';
       const champ = championship.toLowerCase();
@@ -546,20 +509,14 @@
       return '';
     }
 
-    // ADDED: Sport filter select element
-    const sportFilterSelect  = document.getElementById('sport-filter');
+    const sportFilterSelect = document.getElementById('sport-filter');
     const showAbsencesSwitch = document.getElementById('show-absences-switch');
-    const teamFilterSelect   = document.getElementById('team-filter');
-    const typeFilterSelect   = document.getElementById('type-filter');
+    const teamFilterSelect = document.getElementById('team-filter');
+    const typeFilterSelect = document.getElementById('type-filter');
 
-    // ADDED: Global variable for team full names
-    let teamFullNames = {};
-
-    // ADDED: Function to load team colors and full names from sheet
     function loadTeamColors(teamColorSheet) {
       if (!teamColorSheet || teamColorSheet.length < 2) return;
       
-      // Skip header row, process data rows
       teamColorSheet.slice(1).forEach(row => {
         const teamName = row[0]?.trim();
         const color = row[1]?.trim();
@@ -580,6 +537,7 @@
       const [d,m,y] = dmy.split('/').map(x => x.trim());
       return `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
     }
+    
     function parseDateObj(dmy='') {
       if (!dmy.includes('/')) return null;
       const [d,m,y] = dmy.split('/').map(n => parseInt(n,10));
@@ -593,33 +551,28 @@
         .forEach(team => teamFilterSelect.append(new Option(team, team)));
     }
 
-    // ADDED: Display mode switching function
     function switchDisplayMode(mode) {
+      console.log('Switching display mode to:', mode);
       currentDisplayMode = mode;
       
-      // Update button states
       document.getElementById('desktop-view-btn').classList.toggle('active', mode === 'desktop');
       document.getElementById('mobile-view-btn').classList.toggle('active', mode === 'mobile');
       
-      // Update body classes
       const body = document.body;
       body.classList.remove('mobile-mode', 'desktop-mode', 'auto-mobile');
       
       if (mode === 'mobile') {
         body.classList.add('mobile-mode');
-        // Only set absences default if user hasn't made a choice
         if (!window.userHasSetAbsences) {
           document.getElementById('show-absences-switch').checked = false;
         }
       } else if (mode === 'desktop') {
         body.classList.add('desktop-mode');
-        // Only set absences default if user hasn't made a choice
         if (!window.userHasSetAbsences) {
           document.getElementById('show-absences-switch').checked = true;
         }
       } else {
         body.classList.add('auto-mobile');
-        // Auto mode: check screen size to determine absences default
         if (!window.userHasSetAbsences) {
           if (window.innerWidth <= 768) {
             document.getElementById('show-absences-switch').checked = false;
@@ -628,41 +581,27 @@
           }
         }
       }
-    }
-    
-    // ADDED: Auto-detect mobile and switch on resize only
-    function detectMobileAndSwitch() {
-      if (window.innerWidth <= 768) {
-        // Only switch if not already in mobile mode and no manual selection made
-        if (currentDisplayMode !== 'mobile') {
-          switchDisplayMode('mobile');
-        }
+      
+      // Re-apply filters after mode change
+      if (currentView === 'calendar') {
+        applyFilters();
+      } else {
+        applyListFilters();
       }
     }
-    
-    // Debounce resize events to prevent rapid firing
-    let resizeTimeout;
-    window.addEventListener('resize', () => {
-      clearTimeout(resizeTimeout);
-      resizeTimeout = setTimeout(detectMobileAndSwitch, 250);
-    });
-    
-    // ADDED: View switching functions
+
     function switchView(view) {
+      console.log('Switching view to:', view);
       currentView = view;
       
-      // Update button states
       document.getElementById('calendar-view-btn').classList.toggle('active', view === 'calendar');
       document.getElementById('list-view-btn').classList.toggle('active', view === 'list');
       
-      // Show/hide containers
       document.getElementById('calendar-container').style.display = view === 'calendar' ? 'block' : 'none';
       document.getElementById('list-container').style.display = view === 'list' ? 'block' : 'none';
       
-      // Show/hide list organization toggle
       document.getElementById('list-org-toggle').style.display = view === 'list' ? 'flex' : 'none';
       
-      // Re-render current view
       if (view === 'calendar') {
         renderCalendar(allMatches, allClosures);
       } else {
@@ -673,287 +612,122 @@
     function switchListOrg(org) {
       currentListOrg = org;
       
-      // Update button states
       document.getElementById('per-day-btn').classList.toggle('active', org === 'day');
       document.getElementById('per-team-btn').classList.toggle('active', org === 'team');
       
-      // Re-render list view
       renderListView();
     }
 
-    // ADDED: List view rendering
-    function renderListView() {
-      const container = document.getElementById('list-container');
-      container.innerHTML = '';
+    // SIMPLIFIED FILTER FUNCTION - FIXED VERSION
+    function applyFilters() {
+      const sportVal = sportFilterSelect.value;
+      const showAbs = showAbsencesSwitch.checked;
+      const teamVal = teamFilterSelect.value;
+      const typeVal = typeFilterSelect.value;
       
-      if (currentListOrg === 'day') {
-        renderListByDay();
+      console.log('=== APPLYING FILTERS ===');
+      console.log('Sport filter:', sportVal);
+      console.log('Show absences:', showAbs);
+      console.log('Team filter:', teamVal);
+      console.log('Type filter:', typeVal);
+      console.log('Current display mode:', currentDisplayMode);
+      console.log('Body classes:', document.body.className);
+
+      // Handle absences visibility with CSS class
+      const body = document.body;
+      if (!showAbs) {
+        body.classList.add('hide-absences');
       } else {
-        renderListByTeam();
+        body.classList.remove('hide-absences');
       }
-    }
 
-    function renderListByDay() {
-      const container = document.getElementById('list-container');
+      // Count elements for debugging
+      const desktopElements = document.querySelectorAll('.match-container');
+      const mobileElements = document.querySelectorAll('.match-container-compact');
       
-      // Group matches by date (excluding absences)
-      const matchesByDate = {};
-      allMatches.forEach(match => {
-        if (match.isPref) return; // Skip absences in list view
-        if (!matchesByDate[match.date]) {
-          matchesByDate[match.date] = [];
-        }
-        matchesByDate[match.date].push(match);
-      });
-      
-      // Sort dates and filter to September-May range
-      const sortedDates = Object.keys(matchesByDate).sort().filter(date => {
-        const dateObj = new Date(date);
-        const month = dateObj.getMonth() + 1; // 0-indexed to 1-indexed
-        const year = dateObj.getFullYear();
-        // Include September 2025 to May 2026
-        return (year === 2025 && month >= 9) || (year === 2026 && month <= 5);
-      });
-      
-      sortedDates.forEach(date => {
-        const matches = matchesByDate[date];
-        const dateObj = new Date(date);
-        const dateStr = dateObj.toLocaleDateString('en-GB', { 
-          weekday: 'long', 
-          year: 'numeric', 
-          month: 'long', 
-          day: 'numeric' 
-        });
-        
-        let dayHtml = `
-          <div class="list-day">
-            <div class="list-day-header">${dateStr}</div>
-            <div class="list-day-content">
-        `;
-        
-        // Sort matches by time
-        matches.sort((a, b) => (a.time || '').localeCompare(b.time || ''));
-        
-        matches.forEach(match => {
-          dayHtml += renderListMatch(match);
-        });
-        
-        dayHtml += '</div></div>';
-        container.insertAdjacentHTML('beforeend', dayHtml);
-      });
-      
-      applyListFilters();
-    }
+      console.log('Desktop elements found:', desktopElements.length);
+      console.log('Mobile elements found:', mobileElements.length);
 
-    function renderListByTeam() {
-      const container = document.getElementById('list-container');
+      // Filter desktop elements
+      let desktopVisible = 0;
+      let desktopHidden = 0;
       
-      // Group matches by team (excluding absences)
-      const matchesByTeam = {};
-      allMatches.forEach(match => {
-        if (match.isPref) return; // Skip absences in list view
-        if (!match.team) return;
-        if (!matchesByTeam[match.team]) {
-          matchesByTeam[match.team] = [];
-        }
-        matchesByTeam[match.team].push(match);
-      });
-      
-      // Sort teams
-      const sortedTeams = Object.keys(matchesByTeam).sort();
-      
-      sortedTeams.forEach(team => {
-        const matches = matchesByTeam[team];
+      desktopElements.forEach(el => {
+        const matchContent = el.querySelector('.match-content');
+        const isAbs = matchContent && matchContent.classList.contains('absence-entry');
+        let visible = true;
         
-        // Filter matches to September-May range
-        const filteredMatches = matches.filter(match => {
-          const dateObj = new Date(match.date);
-          const month = dateObj.getMonth() + 1; // 0-indexed to 1-indexed
-          const year = dateObj.getFullYear();
-          // Include September 2025 to May 2026
-          return (year === 2025 && month >= 9) || (year === 2026 && month <= 5);
-        });
-        
-        // Skip teams with no matches in the date range
-        if (filteredMatches.length === 0) return;
-        
-        // Get the full name for the team header
-        const teamFullName = teamFullNames[team] || team;
-        
-        let teamHtml = `
-          <div class="list-team">
-            <div class="list-team-header">${teamFullName}</div>
-            <div class="list-team-content">
-              <div class="table-responsive">
-                <table class="table table-striped table-hover">
-                  <thead class="table-dark">
-                    <tr>
-                      <th>Home team</th>
-                      <th>Guest team</th>
-                      <th>Home / Away</th>
-                      <th>Date</th>
-                      <th>Weekday</th>
-                      <th>Time</th>
-                      <th>Liga</th>
-                      <th>Halle</th>
-                      <th>Status</th>
-                      <th>Sport</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-        `;
-        
-        // Sort matches by date and time (matches without time go to bottom)
-        filteredMatches.sort((a, b) => {
-          const dateCompare = a.date.localeCompare(b.date);
-          if (dateCompare !== 0) return dateCompare;
-          
-          // If one has time and the other doesn't, the one with time comes first
-          if (a.time && !b.time) return -1;
-          if (!a.time && b.time) return 1;
-          
-          // If both have time or both don't have time, sort alphabetically
-          return (a.time || '').localeCompare(b.time || '');
-        });
-        
-        filteredMatches.forEach(match => {
-          const dateObj = new Date(match.date);
-          const dateStr = dateObj.toLocaleDateString('en-GB', { 
-            day: '2-digit', 
-            month: '2-digit', 
-            year: 'numeric' 
-          });
-          const weekday = dateObj.toLocaleDateString('en-GB', { weekday: 'short' });
-          
-          let homeTeam, awayTeam, matchType;
-          if (match.type.includes('home')) {
-            homeTeam = match.team;
-            awayTeam = match.opponent;
-            matchType = 'Home';
-          } else if (match.type.includes('away')) {
-            homeTeam = match.opponent;
-            awayTeam = match.team;
-            matchType = 'Away';
-          } else {
-            homeTeam = match.team;
-            awayTeam = match.opponent;
-            matchType = 'vs';
-          }
-          
-          // Use full names for team table view
-          const homeTeamFull = teamFullNames[homeTeam] || homeTeam;
-          const awayTeamFull = teamFullNames[awayTeam] || awayTeam;
-          
-          // Format time column to show league in parentheses even when no time
-          let timeDisplay = match.time || '';
-          if (match.championship) {
-            const leagueAlias = championshipAlias[match.championship] || match.championship;
-            if (timeDisplay) {
-              timeDisplay += ` (${leagueAlias})`;
-            } else {
-              timeDisplay = `(${leagueAlias})`;
-            }
-          }
-          
-          teamHtml += `
-            <tr data-team="${match.team}" data-type="${match.type}" data-sport="${match.sport || ''}">
-              <td>${homeTeamFull}</td>
-              <td>${awayTeamFull}</td>
-              <td>${matchType}</td>
-              <td>${dateStr}</td>
-              <td>${weekday}</td>
-              <td>${timeDisplay}</td>
-              <td>${championshipAlias[match.championship] || match.championship || ''}</td>
-              <td>${match.gym || ''}</td>
-              <td>${match.status || ''}</td>
-              <td>${match.sport === 'Basketball' ? 'BB' : 'VB'}</td>
-            </tr>
-          `;
-        });
-        
-        teamHtml += `
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        `;
-        container.insertAdjacentHTML('beforeend', teamHtml);
-      });
-      
-      applyListFilters();
-    }
+        // Apply filters
+        if (sportVal !== 'all' && el.dataset.sport !== sportVal) visible = false;
+        if (visible && teamVal !== 'all' && el.dataset.team !== teamVal) visible = false;
+        if (visible && !isAbs && typeVal !== 'all' && !el.dataset.type.includes(typeVal)) visible = false;
 
-    function renderListMatch(match) {
-      const dateObj = new Date(match.date);
-      const dateStr = dateObj.toLocaleDateString('en-GB', { 
-        month: 'short', 
-        day: 'numeric' 
-      });
-      
-      let matchHtml = `<div class="list-match" data-team="${match.team}" data-type="${match.type}" data-sport="${match.sport || ''}"`;
-      
-      if (match.isPref) {
-        matchHtml += ' list-match-absence">';
-        matchHtml += `<div class="list-match-sport">${match.sport === 'Basketball' ? 'BB' : 'VB'}</div>`;
-        matchHtml += `<div class="list-match-info">`;
-        matchHtml += `<div class="list-match-time">🏖️ Absence - Priority ${match.priority}</div>`;
-        matchHtml += `<div class="list-match-details">${match.team}</div>`;
-      } else {
-        matchHtml += '">';
-        matchHtml += `<div class="list-match-sport">${match.sport === 'Basketball' ? 'BB' : 'VB'}</div>`;
-        matchHtml += `<div class="list-match-info">`;
+        // Set visibility based on display mode
+        const isDesktopMode = document.body.classList.contains('desktop-mode') || 
+                             (document.body.classList.contains('auto-mobile') && window.innerWidth > 768);
         
-        if (match.time) {
-          matchHtml += `<div class="list-match-time">${match.time}`;
-          if (match.championship) {
-            matchHtml += ` (${championshipAlias[match.championship] || match.championship})`;
-          }
-          matchHtml += '</div>';
-        }
-        
-        let matchDetails = '';
-        if (match.type.includes('home')) {
-          matchDetails = `${match.team} – ${match.opponent}`;
-        } else if (match.type.includes('away')) {
-          matchDetails = `${match.opponent} – ${match.team}`;
+        if (visible && isDesktopMode) {
+          el.style.display = 'flex';
+          el.classList.remove('d-none');
+          desktopVisible++;
         } else {
-          matchDetails = `${match.team} vs ${match.opponent}`;
+          el.style.display = 'none';
+          el.classList.add('d-none');
+          desktopHidden++;
         }
-        
-        matchHtml += `<div class="list-match-details">${matchDetails}</div>`;
-        
-        if (match.gym) {
-          matchHtml += `<div class="list-match-details">📍 ${match.gym}</div>`;
-        }
-        
-        if (match.status) {
-          matchHtml += `<div class="list-match-status">${match.status}</div>`;
-        }
-      }
+      });
+
+      // Filter mobile elements
+      let mobileVisible = 0;
+      let mobileHidden = 0;
       
-      matchHtml += `</div>`;
-      matchHtml += `<div class="list-match-date">${dateStr}</div>`;
-      matchHtml += '</div>';
-      
-      return matchHtml;
+      mobileElements.forEach(el => {
+        const isAbs = el.classList.contains('absence-entry');
+        let visible = true;
+        
+        // Apply filters
+        if (sportVal !== 'all' && el.dataset.sport !== sportVal) visible = false;
+        if (visible && teamVal !== 'all' && el.dataset.team !== teamVal) visible = false;
+        if (visible && !isAbs && typeVal !== 'all' && !el.dataset.type.includes(typeVal)) visible = false;
+
+        // Set visibility based on display mode
+        const isMobileMode = document.body.classList.contains('mobile-mode') || 
+                            (document.body.classList.contains('auto-mobile') && window.innerWidth <= 768);
+        
+        if (visible && isMobileMode) {
+          el.style.display = 'flex';
+          el.classList.remove('d-none');
+          mobileVisible++;
+        } else {
+          el.style.display = 'none';
+          el.classList.add('d-none');
+          mobileHidden++;
+        }
+      });
+
+      console.log('Desktop - Visible:', desktopVisible, 'Hidden:', desktopHidden);
+      console.log('Mobile - Visible:', mobileVisible, 'Hidden:', mobileHidden);
+      console.log('=== FILTERS APPLIED ===');
     }
 
-    // ADDED: Apply filters to list view
     function applyListFilters() {
       const sportVal = sportFilterSelect.value;
       const showAbs = showAbsencesSwitch.checked;
       const teamVal = teamFilterSelect.value;
       const typeVal = typeFilterSelect.value;
 
+      console.log('=== APPLYING LIST FILTERS ===');
+      console.log('Sport filter:', sportVal);
+      console.log('Show absences:', showAbs);
+      console.log('Team filter:', teamVal);
+      console.log('Type filter:', typeVal);
+
       if (currentListOrg === 'day') {
-        // Filter for day view (using existing list-match elements)
         document.querySelectorAll('.list-match').forEach(el => {
           const isAbs = el.classList.contains('list-match-absence');
           let visible = true;
           
           if (sportVal !== 'all' && el.dataset.sport !== sportVal) visible = false;
-          // Handle absences based on the switch
           if (visible && !showAbs && isAbs) visible = false;
           if (visible && teamVal !== 'all' && el.dataset.team !== teamVal) visible = false;
           if (visible && !isAbs && typeVal !== 'all' && !el.dataset.type.includes(typeVal)) visible = false;
@@ -961,13 +735,11 @@
           el.style.display = visible ? 'flex' : 'none';
         });
         
-        // Hide empty day sections
         document.querySelectorAll('.list-day').forEach(section => {
           const visibleMatches = section.querySelectorAll('.list-match:not([style*="display: none"])').length;
           section.style.display = visibleMatches > 0 ? 'block' : 'none';
         });
       } else {
-        // Filter for team view (using table rows)
         document.querySelectorAll('.list-team tbody tr').forEach(el => {
           let visible = true;
           
@@ -978,633 +750,108 @@
           el.style.display = visible ? 'table-row' : 'none';
         });
         
-        // Hide empty team sections
         document.querySelectorAll('.list-team').forEach(section => {
           const visibleRows = section.querySelectorAll('tbody tr:not([style*="display: none"])').length;
           section.style.display = visibleRows > 0 ? 'block' : 'none';
         });
       }
+      
+      console.log('=== LIST FILTERS APPLIED ===');
     }
 
-    async function loadData() {
-      const cont = document.getElementById('calendar-container');
-      cont.innerHTML = '<p class="p-4">Loading data...</p>';
-
-      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}` +
-                  `/values:batchGet?` + RANGES.map(r => 'ranges=' + encodeURIComponent(r)).join('&') +
-                  `&majorDimension=ROWS&key=${API_KEY}`;
-
-      try {
-        const res = await fetch(url);
-        if (!res.ok) throw new Error(await res.text());
-        const { valueRanges } = await res.json();
-
-        // ADDED: Load team colors from sheet
-        loadTeamColors(valueRanges[3].values || []);
-
-        // Matches
-        const rawMatches = valueRanges[0].values || [];
-        if (rawMatches.length < 2) { 
-          allMatches = [];
-          allClosures = [];
-          renderCalendar([], []); 
-          return; 
-        }
-        const hdr = rawMatches[0].map(h => h.trim().toLowerCase());
-        const ix = name => hdr.indexOf(name.toLowerCase());
-        // MODIFIED: Added iSport
-        const [iTeam, iChamp, iOpp, iWeekday, iDate, iTime, iType, iStatus, iGym, iSport] = [
-          ix('team'), ix('championship'), ix('opponent team'), ix('weekday'),
-          ix('date'), ix('time'), ix('type'), ix('status'), ix('gym/halle'), ix('sport')
-        ];
-
-        // MODIFIED: Added sport property to match objects
-        allMatches = rawMatches.slice(1).map(r => ({
-          team:         r[iTeam]    || '',
-          championship: r[iChamp]   || '',
-          opponent:     r[iOpp]     || '',
-          date:         parseDateDMY(r[iDate] || ''),
-          time:         r[iTime]    || '',
-          type:         (r[iType]   || '').toLowerCase(),
-          status:       r[iStatus]  || '',
-          gym:          r[iGym]     || '',
-          sport:        r[iSport]   || '',
-          isPref:       false
-        })).filter(m => /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(m.date));
-
-        // Closures
-        allClosures = [];
-        (valueRanges[1].values || []).slice(1).forEach(r => {
-          const from = parseDateObj(r[0]), to = parseDateObj(r[1]);
-          if (!from || !to) return;
-          const reason = (r[2] || '').toLowerCase();
-          for (let d = new Date(from); d <= to; d.setDate(d.getDate()+1)) {
-            allClosures.push({
-              date: `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`,
-              reason
-            });
-          }
-        });
-
-        // Absences
-        // MODIFIED: Now parses 'sport' column from preferences sheet
-        const prefValues = valueRanges[2].values || [];
-        if (prefValues.length > 1) {
-            const ph = prefValues[0].map(h => h.trim().toLowerCase());
-            const pi = name => ph.indexOf(name);
-            const piTeam = pi('team'), piPrio = pi('priority'), piD0 = pi('date from'), piD1 = pi('date to'), piSport = pi('sport');
-
-            prefValues.slice(1).forEach(r => {
-                const team = r[piTeam], prio = r[piPrio], d0 = r[piD0], d1 = r[piD1], sport = r[piSport];
-                if (!team || !prio || !d0 || !d1 || !sport) return;
-                const start = parseDateObj(d0), end = parseDateObj(d1);
-                if (!start || !end) return;
-                for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-                    allMatches.push({
-                        team, opponent: '', date: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`,
-                        time: '', type: 'absence', status: '', gym: '', isPref: true, priority: prio,
-                        sport: sport || ''
-                    });
-                }
-            });
-        }
-
-        populateTeamFilter(allMatches);
-        
-        if (currentView === 'calendar') {
-          renderCalendar(allMatches, allClosures);
-        } else {
-          renderListView();
-        }
-      } catch (e) {
-        console.error(e);
-        document.getElementById('calendar-container').innerHTML =
-          `<p class="alert alert-danger m-4">Error: ${e.message}</p>`;
-      }
-    }
-
-    // MODIFIED: applyFilters now includes sport filter logic and handles compact view
-    function applyFilters() {
-      const sportVal = sportFilterSelect.value;
-      const showAbs = showAbsencesSwitch.checked;
-      const teamVal = teamFilterSelect.value;
-      const typeVal = typeFilterSelect.value;
-      
-      console.log('=== FILTER DEBUG ===');
-      console.log('showAbs:', showAbs);
-      console.log('sportVal:', sportVal);
-      console.log('teamVal:', teamVal);
-      console.log('typeVal:', typeVal);
-      console.log('currentDisplayMode:', currentDisplayMode);
-      console.log('body classes:', document.body.className);
-
-      // Add/remove CSS class to control absence visibility
-      const body = document.body;
-      if (!showAbs) {
-        body.classList.add('hide-absences');
-      } else {
-        body.classList.remove('hide-absences');
-      }
-
-      // Filter other elements normally
-      let desktopAbsenceCount = 0;
-      document.querySelectorAll('.match-container').forEach(el => {
-        const matchContent = el.querySelector('.match-content');
-        const isAbs = matchContent.classList.contains('absence-entry');
-        let visible = true;
-        
-        // Only debug first 2 absences
-        if (isAbs && desktopAbsenceCount < 2) {
-          console.log('Desktop element:', {
-            isAbs: isAbs,
-            team: el.dataset.team,
-            sport: el.dataset.sport,
-            type: el.dataset.type
-          });
-          desktopAbsenceCount++;
-        }
-        
-        if (sportVal !== 'all' && el.dataset.sport !== sportVal) visible = false;
-        if (visible && teamVal !== 'all' && el.dataset.team !== teamVal) visible = false;
-        if (visible && !isAbs && typeVal !== 'all' && !el.dataset.type.includes(typeVal)) visible = false;
-
-        if (isAbs && desktopAbsenceCount <= 2) {
-          console.log('Desktop element result:', { visible, isAbs, showAbs });
-        }
-
-        // Handle visibility for all elements - respect current display mode
-        if (visible) {
-          // Check if we're in desktop mode
-          const isDesktopMode = document.body.classList.contains('desktop-mode') || 
-                               (document.body.classList.contains('auto-mobile') && window.innerWidth > 768);
-          
-          if (isDesktopMode) {
-            el.style.display = 'flex';
-            el.classList.remove('d-none');
-          } else {
-            el.style.display = 'none';
-            el.classList.add('d-none');
-          }
-        } else {
-          el.style.display = 'none';
-          el.classList.add('d-none');
-        }
-      });
-      
-      // Filter mobile compact view
-      let mobileAbsenceCount = 0;
-      console.log('Filtering mobile elements, count:', document.querySelectorAll('.match-container-compact').length);
-      document.querySelectorAll('.match-container-compact').forEach(el => {
-        const isAbs = el.classList.contains('absence-entry');
-        let visible = true;
-        
-        // Debug VB elements specifically
-        if (el.dataset.sport === 'Volleyball') {
-          console.log('VB element found:', {
-            isAbs: isAbs,
-            team: el.dataset.team,
-            sport: el.dataset.sport,
-            type: el.dataset.type,
-            currentDisplay: el.style.display,
-            hasDNone: el.classList.contains('d-none')
-          });
-        }
-        
-        // Only debug first 2 absences
-        if (isAbs && mobileAbsenceCount < 2) {
-          console.log('Mobile element:', {
-            isAbs: isAbs,
-            team: el.dataset.team,
-            sport: el.dataset.sport,
-            type: el.dataset.type
-          });
-          mobileAbsenceCount++;
-        }
-        
-        if (sportVal !== 'all' && el.dataset.sport !== sportVal) visible = false;
-        if (visible && teamVal !== 'all' && el.dataset.team !== teamVal) visible = false;
-        if (visible && !isAbs && typeVal !== 'all' && !el.dataset.type.includes(typeVal)) visible = false;
-
-        // Debug VB elements after filter logic
-        if (el.dataset.sport === 'Volleyball') {
-          console.log('VB element after filter logic:', { 
-            visible, 
-            sportVal, 
-            elSport: el.dataset.sport,
-            sportMatch: sportVal === 'all' || el.dataset.sport === sportVal
-          });
-        }
-
-        if (isAbs && mobileAbsenceCount <= 2) {
-          console.log('Mobile element result:', { visible, isAbs, showAbs });
-        }
-
-        // Handle visibility for all elements - respect current display mode
-        if (visible) {
-          // Check if we're in mobile mode
-          const isMobileMode = document.body.classList.contains('mobile-mode') || 
-                              (document.body.classList.contains('auto-mobile') && window.innerWidth <= 768);
-          
-          // Debug VB elements display logic
-          if (el.dataset.sport === 'Volleyball') {
-            console.log('VB element display logic:', {
-              visible,
-              isMobileMode,
-              bodyClasses: document.body.className,
-              windowWidth: window.innerWidth,
-              willShow: isMobileMode
-            });
-          }
-          
-          if (isMobileMode) {
-            el.style.display = 'flex';
-            el.classList.remove('d-none');
-          } else {
-            el.style.display = 'none';
-            el.classList.add('d-none');
-          }
-        } else {
-          el.style.display = 'none';
-          el.classList.add('d-none');
-        }
-      });
-      
-      // Clean up any leftover elements after filtering (this is what mobile mode does)
-      document.querySelectorAll('.match-container').forEach(el => {
-        if (el.style.display === 'none' || el.classList.contains('d-none')) {
-          const sportIndicator = el.querySelector('.sport-indicator');
-          if (sportIndicator) {
-            sportIndicator.remove();
-          }
-        }
-      });
+    // REST OF THE FUNCTIONS (simplified for debugging)
+    function renderListView() {
+      const container = document.getElementById('list-container');
+      container.innerHTML = '<p>List view placeholder</p>';
     }
 
     function renderCalendar(matches, closures) {
-      const byMatch = {}, byClose = {};
-      matches.forEach(e => { (byMatch[e.date] = byMatch[e.date] || []).push(e);
-        if (e.team && !teamColor[e.team]) teamColor[e.team] = '#ccc';
-      });
-      closures.forEach(c => byClose[c.date] = c.reason);
-      Object.values(byMatch).forEach(arr => arr.sort((a,b) => (a.time||'').localeCompare(b.time||'')));
-
       const cont = document.getElementById('calendar-container');
-      cont.innerHTML = '';
-      // Force cleanup of any leftover elements
-      cont.textContent = '';
+      cont.innerHTML = '<p>Calendar view placeholder</p>';
       
-      // Also clean up any absolutely positioned elements that might be floating
-      document.querySelectorAll('.sport-indicator, .home-away-indicator, .cup-indicator, .sport-indicator-compact, .home-away-indicator-compact, .cup-indicator-compact').forEach(el => {
-        if (el.closest('#calendar-container')) {
-          el.remove();
-        }
-      });
-      
-      // Simple cleanup - remove any leftover elements
-      document.querySelectorAll('.match-container, .match-container-compact').forEach(el => {
-        if (!el.querySelector('.match-content') && !el.textContent.trim()) {
-          el.remove();
-        }
-      });
-      
-      // Debug: Check for any leftover sport indicators
-      setTimeout(() => {
-        const leftoverIndicators = document.querySelectorAll('.sport-indicator, .sport-indicator-compact');
-        if (leftoverIndicators.length > 0) {
-          console.log('Found leftover sport indicators:', leftoverIndicators.length);
-          leftoverIndicators.forEach((el, index) => {
-            console.log(`Indicator ${index}:`, el.textContent, 'in cell:', el.closest('td')?.textContent?.trim());
-          });
-        }
-      }, 100);
-      const months = [];
-      for (let d = new Date(2025,8,1); d < new Date(2026,5,1); d.setMonth(d.getMonth()+1)) months.push(new Date(d));
-      const weekdays = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-
-      months.forEach(dt => {
-        const y=dt.getFullYear(), m=dt.getMonth();
-        const first=new Date(y,m,1), last=new Date(y,m+1,0);
-        const offset=(first.getDay()+6)%7;
-        let html = `<table class="calendar"><thead><tr><th colspan="7">${first.toLocaleString('en-GB',{month:'long',year:'numeric'})}</th></tr><tr>${weekdays.map(w=>`<th>${w}</th>`).join('')}</tr></thead><tbody><tr>`;
-        html += '<td></td>'.repeat(offset);
-        for (let d = 1; d <= last.getDate(); d++) {
-          const key = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-          const evs = byMatch[key] || [], reason = byClose[key];
-          const isSpecial = specialDates.includes(key);
-          const cellBg = isSpecial ? 'background:#fff9c4;' : '';
-          const caption = isSpecial ? ` <small style="color:#856404">Spielsamstag</small>` : '';
-          let cell = `<td style="${cellBg}"><strong style="position: relative; z-index: 20;">${d}</strong>${caption}`;
-          evs.forEach(e => {
-            // MODIFIED: Added data-sport attribute
-            const attrs = `data-team="${e.team}" data-type="${e.type}" data-sport="${e.sport || ''}"`;
-            if (e.isPref) {
-              cell += `<div class="match-container">
-                        <div class="match-content absence-entry" ${attrs}>🏖️ ${e.team} Prio ${e.priority}
-                        <div class="sport-indicator">${e.sport === 'Basketball' ? 'BB' : 'VB'}</div>
-                        </div>
-                      </div>`;
-              // ADDED: Compact version for mobile
-              cell += `<div class="match-container-compact absence-entry" ${attrs} onclick="showMatchDetails(${JSON.stringify(e).replace(/"/g, '&quot;')})">
-                        🏖️ ${e.team} Prio ${e.priority}
-                        <div class="sport-indicator-compact">${e.sport === 'Basketball' ? 'BB' : 'VB'}</div>
-                      </div>`;
-            } else {
-              let mv = e.team;
-              const low = e.type;
-              if (e.opponent) mv = low.includes('home') ? `${e.team} – ${e.opponent}` :
-                           low.includes('away') ? `${e.opponent} – ${e.team}` : `${e.team} vs ${e.opponent}`;
-              
-              // MODIFIED: Add opacity for away games and handle team colors
-              let style = '';
-              const teamCol = teamColor[e.team] || '#ccc';
-              const isAway = low.includes('away');
-              const opacity = isAway ? '0.5' : '1';
-              
-              if (e.status.trim().toLowerCase()==='waiting') {
-                style = `border:1px solid ${teamCol}; opacity:${opacity}`;
-              } else {
-                style = `background:${teamCol}; opacity:${opacity}`;
-              }
-              
-              // Determine home/away indicator text
-              let homeAwayText = '';
-              if (low.includes('home')) {
-                homeAwayText = 'H';
-              } else if (low.includes('away')) {
-                homeAwayText = 'A';
-              } else {
-                homeAwayText = 'vs';
-              }
-              
-              const cupEmoji = getCupEmoji(e.championship);
-              if (cupEmoji) {
-                console.log('Cup emoji found:', cupEmoji, 'for championship:', e.championship);
-              }
-              cell += `<div class="match-container">
-                        <div class="match-content" ${attrs} style="${style}">` +
-                        `${e.time ? `<div>${e.time}${e.championship ? ` (${championshipAlias[e.championship]||e.championship})` : ''}</div>` : ''}` +
-                        `<div>${mv}</div>` +
-                        `${e.gym ? `<div>${e.gym}</div>` : ''}` +
-                        `${e.status ? `<small class="status">${e.status}</small>` : ''}` +
-                        `<div class="sport-indicator">${e.sport === 'Basketball' ? 'BB' : 'VB'}</div>
-                        <div class="home-away-indicator">${homeAwayText}</div>
-                        </div>
-                        ${cupEmoji ? `<div class="cup-indicator">${cupEmoji}</div>` : ''}
-                      </div>`;
-              
-              // ADDED: Compact version for mobile
-              const teamFullName = teamFullNames[e.team] || e.team;
-              cell += `<div class="match-container-compact-wrapper">
-                        <div class="match-container-compact" ${attrs} style="${style}" onclick="showMatchDetails(${JSON.stringify(e).replace(/"/g, '&quot;')})">
-                          ${teamFullName}
-                          <div class="sport-indicator-compact">${e.sport === 'Basketball' ? 'BB' : 'VB'}</div>
-                          <div class="home-away-indicator-compact">${homeAwayText}</div>
-                        </div>
-                        ${cupEmoji ? `<div class="cup-indicator-compact">${cupEmoji}</div>` : ''}
-                      </div>`;
-            }
-          });
-          if (reason) {
-            const hasEvents = evs.length > 0;
-            const closureClass = hasEvents ? 'closure closure-with-events' : 'closure';
-            const title = reason.charAt(0).toUpperCase()+reason.slice(1);
-            cell += `<div class="${closureClass}" onclick="showClosureDetails('${reason.replace(/'/g, '\\\'')}')">
-                      <div class="closure-text">${title}</div>
-                      <div class="closure-emoji">🚫</div>
-                    </div>`;
-          }
-          cell += '</td>';
-          html += cell;
-          if ((offset + d - 1) % 7 === 6) html += '</tr><tr>';
-        }
-        html += '<td></td>'.repeat((7-(offset+last.getDate())%7)%7);
-        html += '</tr></tbody></table>';
-        cont.insertAdjacentHTML('beforeend', html);
-        
-        // Handle display mode - show/hide appropriate elements based on current mode
-        let effectiveMode = currentDisplayMode;
-        if (currentDisplayMode === 'auto') {
-          // In auto mode, determine based on screen size
-          effectiveMode = window.innerWidth <= 768 ? 'mobile' : 'desktop';
-        }
-        
-        if (effectiveMode === 'mobile') {
-          // In mobile mode: hide desktop elements, show compact elements
-          document.querySelectorAll('.match-container').forEach(el => {
-            el.style.display = 'none';
-            el.classList.add('d-none');
-          });
-          document.querySelectorAll('.match-container-compact').forEach(el => {
-            el.style.display = 'flex';
-            el.classList.remove('d-none');
-          });
-        } else {
-          // In desktop mode: show desktop elements, hide compact elements
-          document.querySelectorAll('.match-container-compact').forEach(el => {
-            el.style.display = 'none';
-            el.classList.add('d-none');
-          });
-          document.querySelectorAll('.match-container').forEach(el => {
-            el.style.display = 'flex';
-            el.classList.remove('d-none');
-          });
-        }
-      });
-      
-      // Apply filters after display mode is set
-      applyFilters();
-    }
-
-    // ADDED: Modal functions
-    function showClosureDetails(reason) {
-      const modal = document.getElementById('match-modal');
-      const title = document.getElementById('modal-title');
-      const subtitle = document.getElementById('modal-subtitle');
-      const details = document.getElementById('modal-details');
-      
-      title.textContent = '🚫 Gym Closed';
-      subtitle.textContent = '';
-      details.innerHTML = `
-        <div class="modal-detail-row">
-          <div class="modal-detail-label">Reason:</div>
-          <div class="modal-detail-value">${reason}</div>
+      // Add some test elements for debugging
+      cont.innerHTML = `
+        <div class="match-container" data-team="Test Team" data-type="home" data-sport="Volleyball">
+          <div class="match-content">Test Volleyball Match</div>
+        </div>
+        <div class="match-container-compact" data-team="Test Team" data-type="home" data-sport="Volleyball">
+          Test Volleyball Match (Mobile)
+        </div>
+        <div class="match-container" data-team="Test Team" data-type="home" data-sport="Basketball">
+          <div class="match-content">Test Basketball Match</div>
+        </div>
+        <div class="match-container-compact" data-team="Test Team" data-type="home" data-sport="Basketball">
+          Test Basketball Match (Mobile)
         </div>
       `;
       
-      modal.style.display = 'flex';
+      applyFilters();
     }
-    
-    function showMatchDetails(match) {
-      const modal = document.getElementById('match-modal');
-      const title = document.getElementById('modal-title');
-      const subtitle = document.getElementById('modal-subtitle');
-      const details = document.getElementById('modal-details');
-      
-      if (match.isPref) {
-        title.textContent = '🏖️ Absence';
-        subtitle.textContent = `${match.team} - Priority ${match.priority}`;
-        details.innerHTML = `
-          <div class="modal-detail-row">
-            <div class="modal-detail-label">Team:</div>
-            <div class="modal-detail-value">${match.team}</div>
-          </div>
-          <div class="modal-detail-row">
-            <div class="modal-detail-label">Priority:</div>
-            <div class="modal-detail-value">${match.priority}</div>
-          </div>
-          <div class="modal-detail-row">
-            <div class="modal-detail-label">Date:</div>
-            <div class="modal-detail-value">${new Date(match.date).toLocaleDateString('en-GB', { 
-              weekday: 'long', 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
-            })}</div>
-          </div>
-          <div class="modal-detail-row">
-            <div class="modal-detail-label">Sport:</div>
-            <div class="modal-detail-value">${match.sport || 'Not specified'}</div>
-          </div>
-        `;
-      } else {
-        const teamFullName = teamFullNames[match.team] || match.team;
-        const opponentFullName = teamFullNames[match.opponent] || match.opponent;
-        
-        let matchTitle = '';
-        if (match.type.includes('home')) {
-          matchTitle = `${teamFullName} vs ${opponentFullName}`;
-        } else if (match.type.includes('away')) {
-          matchTitle = `${opponentFullName} vs ${teamFullName}`;
-        } else {
-          matchTitle = `${teamFullName} vs ${opponentFullName}`;
-        }
-        
-        title.textContent = matchTitle;
-        subtitle.textContent = match.championship || '';
-        
-        let detailsHtml = '';
-        if (match.time) {
-          detailsHtml += `
-            <div class="modal-detail-row">
-              <div class="modal-detail-label">Time:</div>
-              <div class="modal-detail-value">${match.time}</div>
-            </div>
-          `;
-        }
-        
-        detailsHtml += `
-          <div class="modal-detail-row">
-            <div class="modal-detail-label">Date:</div>
-            <div class="modal-detail-value">${new Date(match.date).toLocaleDateString('en-GB', { 
-              weekday: 'long', 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
-            })}</div>
-          </div>
-          <div class="modal-detail-row">
-            <div class="modal-detail-label">Type:</div>
-            <div class="modal-detail-value">${match.type.includes('home') ? 'Home' : match.type.includes('away') ? 'Away' : 'vs'}</div>
-          </div>
-        `;
-        
-        if (match.gym) {
-          detailsHtml += `
-            <div class="modal-detail-row">
-              <div class="modal-detail-label">Venue:</div>
-              <div class="modal-detail-value">${match.gym}</div>
-            </div>
-          `;
-        }
-        
-        if (match.status) {
-          detailsHtml += `
-            <div class="modal-detail-row">
-              <div class="modal-detail-label">Status:</div>
-              <div class="modal-detail-value">${match.status}</div>
-            </div>
-          `;
-        }
-        
-        detailsHtml += `
-          <div class="modal-detail-row">
-            <div class="modal-detail-label">Sport:</div>
-            <div class="modal-detail-value">${match.sport || 'Not specified'}</div>
-          </div>
-        `;
-        
-        details.innerHTML = detailsHtml;
-      }
-      
-      modal.style.display = 'flex';
+
+    async function loadData() {
+      console.log('Loading data...');
+      allMatches = [];
+      allClosures = [];
+      renderCalendar(allMatches, allClosures);
     }
-    
+
     function closeModal() {
       document.getElementById('match-modal').style.display = 'none';
     }
-    
+
+    // EVENT LISTENERS - FIXED VERSION
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('DOM loaded, setting up event listeners');
+      
+      const isMobile = window.innerWidth <= 768;
+      switchDisplayMode(isMobile ? 'mobile' : 'desktop');
+      loadData();
+      
+      // Set up filter event listeners
+      sportFilterSelect.addEventListener('change', () => {
+        console.log('Sport filter changed to:', sportFilterSelect.value);
+        if (currentView === 'calendar') {
+          applyFilters();
+        } else {
+          applyListFilters();
+        }
+      });
+      
+      showAbsencesSwitch.addEventListener('change', () => {
+        console.log('Show absences changed to:', showAbsencesSwitch.checked);
+        window.userHasSetAbsences = true;
+        if (currentView === 'calendar') {
+          applyFilters();
+        } else {
+          applyListFilters();
+        }
+      });
+      
+      teamFilterSelect.addEventListener('change', () => {
+        console.log('Team filter changed to:', teamFilterSelect.value);
+        if (currentView === 'calendar') {
+          applyFilters();
+        } else {
+          applyListFilters();
+        }
+      });
+      
+      typeFilterSelect.addEventListener('change', () => {
+        console.log('Type filter changed to:', typeFilterSelect.value);
+        if (currentView === 'calendar') {
+          applyFilters();
+        } else {
+          applyListFilters();
+        }
+      });
+      
+      console.log('Event listeners set up complete');
+    });
+
     // Close modal when clicking outside
     document.getElementById('match-modal').addEventListener('click', function(e) {
       if (e.target === this) {
         closeModal();
-      }
-    });
-
-    document.addEventListener('DOMContentLoaded', () => {
-      // Initialize display mode based on screen size
-      const isMobile = window.innerWidth <= 768;
-      console.log('DOMContentLoaded - Screen width:', window.innerWidth, 'isMobile:', isMobile);
-      switchDisplayMode(isMobile ? 'mobile' : 'desktop');
-      console.log('Initial display mode set to:', currentDisplayMode);
-      loadData();
-    });
-    
-
-    
-    // ADDED: Handle window resize for auto mode
-    window.addEventListener('resize', () => {
-      if (currentDisplayMode === 'auto') {
-        // Update absences visibility based on current screen size
-        const shouldShowAbsences = window.innerWidth > 768;
-        const absencesSwitch = document.getElementById('show-absences-switch');
-        if (absencesSwitch.checked !== shouldShowAbsences) {
-          absencesSwitch.checked = shouldShowAbsences;
-          // Only apply filters if calendar is rendered
-          if (currentView === 'calendar') {
-            applyFilters();
-          }
-        }
-      }
-    });
-    // ADDED: event listener for the new sport filter
-    sportFilterSelect.addEventListener('change', () => {
-      if (currentView === 'calendar') {
-        applyFilters();
-      } else {
-        applyListFilters();
-      }
-    });
-    showAbsencesSwitch.addEventListener('change', () => {
-      console.log('Show Absences toggle changed to:', showAbsencesSwitch.checked);
-      window.userHasSetAbsences = true;
-      if (currentView === 'calendar') {
-        applyFilters();
-      } else {
-        applyListFilters();
-      }
-    });
-    teamFilterSelect.addEventListener('change', () => {
-      if (currentView === 'calendar') {
-        applyFilters();
-      } else {
-        applyListFilters();
-      }
-    });
-    typeFilterSelect.addEventListener('change', () => {
-      if (currentView === 'calendar') {
-        applyFilters();
-      } else {
-        applyListFilters();
       }
     });
   </script>
