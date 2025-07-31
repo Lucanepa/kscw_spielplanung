@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-  <title>Team Matches Calendar - Debug</title>
+  <title>Team Matches Calendar</title>
   <link 
     href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" 
     rel="stylesheet"
@@ -409,7 +409,7 @@
 </head>
 <body>
   <div class="controls-header">
-    <h4 id="page-title">📅 Team Matches Planning - DEBUG</h4>
+    <h4 id="page-title">📅 Team Matches Planning</h4>
     <div class="d-flex flex-wrap align-items-center gap-3 mt-2">
       <button class="btn btn-primary" onclick="loadData()">🔄 Refresh</button>
 
@@ -466,10 +466,6 @@
   </div>
 
   <script>
-    // Clear console first
-    console.clear();
-    console.log('=== FILTER DEBUG START ===');
-    
     // === CONFIG ===
     const SPREADSHEET_ID = '16hr2bshVSHoQGZ73xGZiJpnhlBwu6Mn3I5YC4Z-ixXY';
     const API_KEY = 'AIzaSyB4tX_WxrFRajdEdqVI-yTWV0uRNqJQkfc';
@@ -552,7 +548,6 @@
     }
 
     function switchDisplayMode(mode) {
-      console.log('Switching display mode to:', mode);
       currentDisplayMode = mode;
       
       document.getElementById('desktop-view-btn').classList.toggle('active', mode === 'desktop');
@@ -591,7 +586,6 @@
     }
 
     function switchView(view) {
-      console.log('Switching view to:', view);
       currentView = view;
       
       document.getElementById('calendar-view-btn').classList.toggle('active', view === 'calendar');
@@ -618,20 +612,12 @@
       renderListView();
     }
 
-    // SIMPLIFIED FILTER FUNCTION - FIXED VERSION
+    // FIXED FILTER FUNCTION
     function applyFilters() {
       const sportVal = sportFilterSelect.value;
       const showAbs = showAbsencesSwitch.checked;
       const teamVal = teamFilterSelect.value;
       const typeVal = typeFilterSelect.value;
-      
-      console.log('=== APPLYING FILTERS ===');
-      console.log('Sport filter:', sportVal);
-      console.log('Show absences:', showAbs);
-      console.log('Team filter:', teamVal);
-      console.log('Type filter:', typeVal);
-      console.log('Current display mode:', currentDisplayMode);
-      console.log('Body classes:', document.body.className);
 
       // Handle absences visibility with CSS class
       const body = document.body;
@@ -641,18 +627,8 @@
         body.classList.remove('hide-absences');
       }
 
-      // Count elements for debugging
-      const desktopElements = document.querySelectorAll('.match-container');
-      const mobileElements = document.querySelectorAll('.match-container-compact');
-      
-      console.log('Desktop elements found:', desktopElements.length);
-      console.log('Mobile elements found:', mobileElements.length);
-
       // Filter desktop elements
-      let desktopVisible = 0;
-      let desktopHidden = 0;
-      
-      desktopElements.forEach(el => {
+      document.querySelectorAll('.match-container').forEach(el => {
         const matchContent = el.querySelector('.match-content');
         const isAbs = matchContent && matchContent.classList.contains('absence-entry');
         let visible = true;
@@ -669,19 +645,14 @@
         if (visible && isDesktopMode) {
           el.style.display = 'flex';
           el.classList.remove('d-none');
-          desktopVisible++;
         } else {
           el.style.display = 'none';
           el.classList.add('d-none');
-          desktopHidden++;
         }
       });
 
       // Filter mobile elements
-      let mobileVisible = 0;
-      let mobileHidden = 0;
-      
-      mobileElements.forEach(el => {
+      document.querySelectorAll('.match-container-compact').forEach(el => {
         const isAbs = el.classList.contains('absence-entry');
         let visible = true;
         
@@ -697,17 +668,11 @@
         if (visible && isMobileMode) {
           el.style.display = 'flex';
           el.classList.remove('d-none');
-          mobileVisible++;
         } else {
           el.style.display = 'none';
           el.classList.add('d-none');
-          mobileHidden++;
         }
       });
-
-      console.log('Desktop - Visible:', desktopVisible, 'Hidden:', desktopHidden);
-      console.log('Mobile - Visible:', mobileVisible, 'Hidden:', mobileHidden);
-      console.log('=== FILTERS APPLIED ===');
     }
 
     function applyListFilters() {
@@ -715,12 +680,6 @@
       const showAbs = showAbsencesSwitch.checked;
       const teamVal = teamFilterSelect.value;
       const typeVal = typeFilterSelect.value;
-
-      console.log('=== APPLYING LIST FILTERS ===');
-      console.log('Sport filter:', sportVal);
-      console.log('Show absences:', showAbs);
-      console.log('Team filter:', teamVal);
-      console.log('Type filter:', typeVal);
 
       if (currentListOrg === 'day') {
         document.querySelectorAll('.list-match').forEach(el => {
@@ -755,61 +714,351 @@
           section.style.display = visibleRows > 0 ? 'block' : 'none';
         });
       }
-      
-      console.log('=== LIST FILTERS APPLIED ===');
     }
 
-    // REST OF THE FUNCTIONS (simplified for debugging)
+    // REST OF YOUR ORIGINAL FUNCTIONS (simplified)
     function renderListView() {
       const container = document.getElementById('list-container');
       container.innerHTML = '<p>List view placeholder</p>';
     }
 
     function renderCalendar(matches, closures) {
+      const byMatch = {}, byClose = {};
+      matches.forEach(e => { (byMatch[e.date] = byMatch[e.date] || []).push(e);
+        if (e.team && !teamColor[e.team]) teamColor[e.team] = '#ccc';
+      });
+      closures.forEach(c => byClose[c.date] = c.reason);
+      Object.values(byMatch).forEach(arr => arr.sort((a,b) => (a.time||'').localeCompare(b.time||'')));
+
       const cont = document.getElementById('calendar-container');
-      cont.innerHTML = '<p>Calendar view placeholder</p>';
+      cont.innerHTML = '';
       
-      // Add some test elements for debugging
-      cont.innerHTML = `
-        <div class="match-container" data-team="Test Team" data-type="home" data-sport="Volleyball">
-          <div class="match-content">Test Volleyball Match</div>
-        </div>
-        <div class="match-container-compact" data-team="Test Team" data-type="home" data-sport="Volleyball">
-          Test Volleyball Match (Mobile)
-        </div>
-        <div class="match-container" data-team="Test Team" data-type="home" data-sport="Basketball">
-          <div class="match-content">Test Basketball Match</div>
-        </div>
-        <div class="match-container-compact" data-team="Test Team" data-type="home" data-sport="Basketball">
-          Test Basketball Match (Mobile)
-        </div>
-      `;
+      const months = [];
+      for (let d = new Date(2025,8,1); d < new Date(2026,5,1); d.setMonth(d.getMonth()+1)) months.push(new Date(d));
+      const weekdays = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+      months.forEach(dt => {
+        const y=dt.getFullYear(), m=dt.getMonth();
+        const first=new Date(y,m,1), last=new Date(y,m+1,0);
+        const offset=(first.getDay()+6)%7;
+        let html = `<table class="calendar"><thead><tr><th colspan="7">${first.toLocaleString('en-GB',{month:'long',year:'numeric'})}</th></tr><tr>${weekdays.map(w=>`<th>${w}</th>`).join('')}</tr></thead><tbody><tr>`;
+        html += '<td></td>'.repeat(offset);
+        for (let d = 1; d <= last.getDate(); d++) {
+          const key = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+          const evs = byMatch[key] || [], reason = byClose[key];
+          const isSpecial = specialDates.includes(key);
+          const cellBg = isSpecial ? 'background:#fff9c4;' : '';
+          const caption = isSpecial ? ` <small style="color:#856404">Spielsamstag</small>` : '';
+          let cell = `<td style="${cellBg}"><strong style="position: relative; z-index: 20;">${d}</strong>${caption}`;
+          evs.forEach(e => {
+            const attrs = `data-team="${e.team}" data-type="${e.type}" data-sport="${e.sport || ''}"`;
+            if (e.isPref) {
+              cell += `<div class="match-container">
+                        <div class="match-content absence-entry" ${attrs}>🏖️ ${e.team} Prio ${e.priority}
+                        <div class="sport-indicator">${e.sport === 'Basketball' ? 'BB' : 'VB'}</div>
+                        </div>
+                      </div>`;
+              cell += `<div class="match-container-compact absence-entry" ${attrs} onclick="showMatchDetails(${JSON.stringify(e).replace(/"/g, '&quot;')})">
+                        🏖️ ${e.team} Prio ${e.priority}
+                        <div class="sport-indicator-compact">${e.sport === 'Basketball' ? 'BB' : 'VB'}</div>
+                      </div>`;
+            } else {
+              let mv = e.team;
+              const low = e.type;
+              if (e.opponent) mv = low.includes('home') ? `${e.team} – ${e.opponent}` :
+                           low.includes('away') ? `${e.opponent} – ${e.team}` : `${e.team} vs ${e.opponent}`;
+              
+              let style = '';
+              const teamCol = teamColor[e.team] || '#ccc';
+              const isAway = low.includes('away');
+              const opacity = isAway ? '0.5' : '1';
+              
+              if (e.status.trim().toLowerCase()==='waiting') {
+                style = `border:1px solid ${teamCol}; opacity:${opacity}`;
+              } else {
+                style = `background:${teamCol}; opacity:${opacity}`;
+              }
+              
+              let homeAwayText = '';
+              if (low.includes('home')) {
+                homeAwayText = 'H';
+              } else if (low.includes('away')) {
+                homeAwayText = 'A';
+              } else {
+                homeAwayText = 'vs';
+              }
+              
+              const cupEmoji = getCupEmoji(e.championship);
+              cell += `<div class="match-container">
+                        <div class="match-content" ${attrs} style="${style}">` +
+                        `${e.time ? `<div>${e.time}${e.championship ? ` (${championshipAlias[e.championship]||e.championship})` : ''}</div>` : ''}` +
+                        `<div>${mv}</div>` +
+                        `${e.gym ? `<div>${e.gym}</div>` : ''}` +
+                        `${e.status ? `<small class="status">${e.status}</small>` : ''}` +
+                        `<div class="sport-indicator">${e.sport === 'Basketball' ? 'BB' : 'VB'}</div>
+                        <div class="home-away-indicator">${homeAwayText}</div>
+                        </div>
+                        ${cupEmoji ? `<div class="cup-indicator">${cupEmoji}</div>` : ''}
+                      </div>`;
+              
+              const teamFullName = teamFullNames[e.team] || e.team;
+              cell += `<div class="match-container-compact-wrapper">
+                        <div class="match-container-compact" ${attrs} style="${style}" onclick="showMatchDetails(${JSON.stringify(e).replace(/"/g, '&quot;')})">
+                          ${teamFullName}
+                          <div class="sport-indicator-compact">${e.sport === 'Basketball' ? 'BB' : 'VB'}</div>
+                          <div class="home-away-indicator-compact">${homeAwayText}</div>
+                        </div>
+                        ${cupEmoji ? `<div class="cup-indicator-compact">${cupEmoji}</div>` : ''}
+                      </div>`;
+            }
+          });
+          if (reason) {
+            const hasEvents = evs.length > 0;
+            const closureClass = hasEvents ? 'closure closure-with-events' : 'closure';
+            const title = reason.charAt(0).toUpperCase()+reason.slice(1);
+            cell += `<div class="${closureClass}" onclick="showClosureDetails('${reason.replace(/'/g, '\\\'')}')">
+                      <div class="closure-text">${title}</div>
+                      <div class="closure-emoji">🚫</div>
+                    </div>`;
+          }
+          cell += '</td>';
+          html += cell;
+          if ((offset + d - 1) % 7 === 6) html += '</tr><tr>';
+        }
+        html += '<td></td>'.repeat((7-(offset+last.getDate())%7)%7);
+        html += '</tr></tbody></table>';
+        cont.insertAdjacentHTML('beforeend', html);
+      });
       
       applyFilters();
     }
 
     async function loadData() {
-      console.log('Loading data...');
-      allMatches = [];
-      allClosures = [];
-      renderCalendar(allMatches, allClosures);
+      const cont = document.getElementById('calendar-container');
+      cont.innerHTML = '<p class="p-4">Loading data...</p>';
+
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}` +
+                  `/values:batchGet?` + RANGES.map(r => 'ranges=' + encodeURIComponent(r)).join('&') +
+                  `&majorDimension=ROWS&key=${API_KEY}`;
+
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(await res.text());
+        const { valueRanges } = await res.json();
+
+        loadTeamColors(valueRanges[3].values || []);
+
+        const rawMatches = valueRanges[0].values || [];
+        if (rawMatches.length < 2) { 
+          allMatches = [];
+          allClosures = [];
+          renderCalendar([], []); 
+          return; 
+        }
+        const hdr = rawMatches[0].map(h => h.trim().toLowerCase());
+        const ix = name => hdr.indexOf(name.toLowerCase());
+        const [iTeam, iChamp, iOpp, iWeekday, iDate, iTime, iType, iStatus, iGym, iSport] = [
+          ix('team'), ix('championship'), ix('opponent team'), ix('weekday'),
+          ix('date'), ix('time'), ix('type'), ix('status'), ix('gym/halle'), ix('sport')
+        ];
+
+        allMatches = rawMatches.slice(1).map(r => ({
+          team:         r[iTeam]    || '',
+          championship: r[iChamp]   || '',
+          opponent:     r[iOpp]     || '',
+          date:         parseDateDMY(r[iDate] || ''),
+          time:         r[iTime]    || '',
+          type:         (r[iType]   || '').toLowerCase(),
+          status:       r[iStatus]  || '',
+          gym:          r[iGym]     || '',
+          sport:        r[iSport]   || '',
+          isPref:       false
+        })).filter(m => /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(m.date));
+
+        allClosures = [];
+        (valueRanges[1].values || []).slice(1).forEach(r => {
+          const from = parseDateObj(r[0]), to = parseDateObj(r[1]);
+          if (!from || !to) return;
+          const reason = (r[2] || '').toLowerCase();
+          for (let d = new Date(from); d <= to; d.setDate(d.getDate()+1)) {
+            allClosures.push({
+              date: `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`,
+              reason
+            });
+          }
+        });
+
+        const prefValues = valueRanges[2].values || [];
+        if (prefValues.length > 1) {
+            const ph = prefValues[0].map(h => h.trim().toLowerCase());
+            const pi = name => ph.indexOf(name);
+            const piTeam = pi('team'), piPrio = pi('priority'), piD0 = pi('date from'), piD1 = pi('date to'), piSport = pi('sport');
+
+            prefValues.slice(1).forEach(r => {
+                const team = r[piTeam], prio = r[piPrio], d0 = r[piD0], d1 = r[piD1], sport = r[piSport];
+                if (!team || !prio || !d0 || !d1 || !sport) return;
+                const start = parseDateObj(d0), end = parseDateObj(d1);
+                if (!start || !end) return;
+                for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                    allMatches.push({
+                        team, opponent: '', date: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`,
+                        time: '', type: 'absence', status: '', gym: '', isPref: true, priority: prio,
+                        sport: sport || ''
+                    });
+                }
+            });
+        }
+
+        populateTeamFilter(allMatches);
+        
+        if (currentView === 'calendar') {
+          renderCalendar(allMatches, allClosures);
+        } else {
+          renderListView();
+        }
+      } catch (e) {
+        console.error(e);
+        document.getElementById('calendar-container').innerHTML =
+          `<p class="alert alert-danger m-4">Error: ${e.message}</p>`;
+      }
     }
 
+    // MODAL FUNCTIONS
+    function showClosureDetails(reason) {
+      const modal = document.getElementById('match-modal');
+      const title = document.getElementById('modal-title');
+      const subtitle = document.getElementById('modal-subtitle');
+      const details = document.getElementById('modal-details');
+      
+      title.textContent = '🚫 Gym Closed';
+      subtitle.textContent = '';
+      details.innerHTML = `
+        <div class="modal-detail-row">
+          <div class="modal-detail-label">Reason:</div>
+          <div class="modal-detail-value">${reason}</div>
+        </div>
+      `;
+      
+      modal.style.display = 'flex';
+    }
+    
+    function showMatchDetails(match) {
+      const modal = document.getElementById('match-modal');
+      const title = document.getElementById('modal-title');
+      const subtitle = document.getElementById('modal-subtitle');
+      const details = document.getElementById('modal-details');
+      
+      if (match.isPref) {
+        title.textContent = '🏖️ Absence';
+        subtitle.textContent = `${match.team} - Priority ${match.priority}`;
+        details.innerHTML = `
+          <div class="modal-detail-row">
+            <div class="modal-detail-label">Team:</div>
+            <div class="modal-detail-value">${match.team}</div>
+          </div>
+          <div class="modal-detail-row">
+            <div class="modal-detail-label">Priority:</div>
+            <div class="modal-detail-value">${match.priority}</div>
+          </div>
+          <div class="modal-detail-row">
+            <div class="modal-detail-label">Date:</div>
+            <div class="modal-detail-value">${new Date(match.date).toLocaleDateString('en-GB', { 
+              weekday: 'long', 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            })}</div>
+          </div>
+          <div class="modal-detail-row">
+            <div class="modal-detail-label">Sport:</div>
+            <div class="modal-detail-value">${match.sport || 'Not specified'}</div>
+          </div>
+        `;
+      } else {
+        const teamFullName = teamFullNames[match.team] || match.team;
+        const opponentFullName = teamFullNames[match.opponent] || match.opponent;
+        
+        let matchTitle = '';
+        if (match.type.includes('home')) {
+          matchTitle = `${teamFullName} vs ${opponentFullName}`;
+        } else if (match.type.includes('away')) {
+          matchTitle = `${opponentFullName} vs ${teamFullName}`;
+        } else {
+          matchTitle = `${teamFullName} vs ${opponentFullName}`;
+        }
+        
+        title.textContent = matchTitle;
+        subtitle.textContent = match.championship || '';
+        
+        let detailsHtml = '';
+        if (match.time) {
+          detailsHtml += `
+            <div class="modal-detail-row">
+              <div class="modal-detail-label">Time:</div>
+              <div class="modal-detail-value">${match.time}</div>
+            </div>
+          `;
+        }
+        
+        detailsHtml += `
+          <div class="modal-detail-row">
+            <div class="modal-detail-label">Date:</div>
+            <div class="modal-detail-value">${new Date(match.date).toLocaleDateString('en-GB', { 
+              weekday: 'long', 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            })}</div>
+          </div>
+          <div class="modal-detail-row">
+            <div class="modal-detail-label">Type:</div>
+            <div class="modal-detail-value">${match.type.includes('home') ? 'Home' : match.type.includes('away') ? 'Away' : 'vs'}</div>
+          </div>
+        `;
+        
+        if (match.gym) {
+          detailsHtml += `
+            <div class="modal-detail-row">
+              <div class="modal-detail-label">Venue:</div>
+              <div class="modal-detail-value">${match.gym}</div>
+            </div>
+          `;
+        }
+        
+        if (match.status) {
+          detailsHtml += `
+            <div class="modal-detail-row">
+              <div class="modal-detail-label">Status:</div>
+              <div class="modal-detail-value">${match.status}</div>
+            </div>
+          `;
+        }
+        
+        detailsHtml += `
+          <div class="modal-detail-row">
+            <div class="modal-detail-label">Sport:</div>
+            <div class="modal-detail-value">${match.sport || 'Not specified'}</div>
+          </div>
+        `;
+        
+        details.innerHTML = detailsHtml;
+      }
+      
+      modal.style.display = 'flex';
+    }
+    
     function closeModal() {
       document.getElementById('match-modal').style.display = 'none';
     }
 
-    // EVENT LISTENERS - FIXED VERSION
+    // FIXED EVENT LISTENERS
     document.addEventListener('DOMContentLoaded', () => {
-      console.log('DOM loaded, setting up event listeners');
-      
       const isMobile = window.innerWidth <= 768;
       switchDisplayMode(isMobile ? 'mobile' : 'desktop');
       loadData();
       
       // Set up filter event listeners
       sportFilterSelect.addEventListener('change', () => {
-        console.log('Sport filter changed to:', sportFilterSelect.value);
         if (currentView === 'calendar') {
           applyFilters();
         } else {
@@ -818,7 +1067,6 @@
       });
       
       showAbsencesSwitch.addEventListener('change', () => {
-        console.log('Show absences changed to:', showAbsencesSwitch.checked);
         window.userHasSetAbsences = true;
         if (currentView === 'calendar') {
           applyFilters();
@@ -828,7 +1076,6 @@
       });
       
       teamFilterSelect.addEventListener('change', () => {
-        console.log('Team filter changed to:', teamFilterSelect.value);
         if (currentView === 'calendar') {
           applyFilters();
         } else {
@@ -837,15 +1084,12 @@
       });
       
       typeFilterSelect.addEventListener('change', () => {
-        console.log('Type filter changed to:', typeFilterSelect.value);
         if (currentView === 'calendar') {
           applyFilters();
         } else {
           applyListFilters();
         }
       });
-      
-      console.log('Event listeners set up complete');
     });
 
     // Close modal when clicking outside
