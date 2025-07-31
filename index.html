@@ -619,6 +619,12 @@
       const teamVal = teamFilterSelect.value;
       const typeVal = typeFilterSelect.value;
 
+      console.log('=== APPLYING FILTERS ===');
+      console.log('Sport filter:', sportVal);
+      console.log('Show absences:', showAbs);
+      console.log('Team filter:', teamVal);
+      console.log('Type filter:', typeVal);
+
       // Handle absences visibility with CSS class
       const body = document.body;
       if (!showAbs) {
@@ -628,6 +634,8 @@
       }
 
       // Filter desktop elements
+      let desktopVisible = 0;
+      let desktopHidden = 0;
       document.querySelectorAll('.match-container').forEach(el => {
         const matchContent = el.querySelector('.match-content');
         const isAbs = matchContent && matchContent.classList.contains('absence-entry');
@@ -645,13 +653,17 @@
         if (visible && isDesktopMode) {
           el.style.display = 'flex';
           el.classList.remove('d-none');
+          desktopVisible++;
         } else {
           el.style.display = 'none';
           el.classList.add('d-none');
+          desktopHidden++;
         }
       });
 
       // Filter mobile elements
+      let mobileVisible = 0;
+      let mobileHidden = 0;
       document.querySelectorAll('.match-container-compact').forEach(el => {
         const isAbs = el.classList.contains('absence-entry');
         let visible = true;
@@ -668,11 +680,17 @@
         if (visible && isMobileMode) {
           el.style.display = 'flex';
           el.classList.remove('d-none');
+          mobileVisible++;
         } else {
           el.style.display = 'none';
           el.classList.add('d-none');
+          mobileHidden++;
         }
       });
+
+      console.log('Desktop - Visible:', desktopVisible, 'Hidden:', desktopHidden);
+      console.log('Mobile - Visible:', mobileVisible, 'Hidden:', mobileHidden);
+      console.log('=== FILTERS APPLIED ===');
     }
 
     function applyListFilters() {
@@ -753,8 +771,8 @@
           evs.forEach(e => {
             const attrs = `data-team="${e.team}" data-type="${e.type}" data-sport="${e.sport || ''}"`;
             if (e.isPref) {
-              cell += `<div class="match-container">
-                        <div class="match-content absence-entry" ${attrs}>🏖️ ${e.team} Prio ${e.priority}
+              cell += `<div class="match-container" ${attrs}>
+                        <div class="match-content absence-entry">🏖️ ${e.team} Prio ${e.priority}
                         <div class="sport-indicator">${e.sport === 'Basketball' ? 'BB' : 'VB'}</div>
                         </div>
                       </div>`;
@@ -789,8 +807,8 @@
               }
               
               const cupEmoji = getCupEmoji(e.championship);
-              cell += `<div class="match-container">
-                        <div class="match-content" ${attrs} style="${style}">` +
+              cell += `<div class="match-container" ${attrs}>
+                        <div class="match-content" style="${style}">` +
                         `${e.time ? `<div>${e.time}${e.championship ? ` (${championshipAlias[e.championship]||e.championship})` : ''}</div>` : ''}` +
                         `<div>${mv}</div>` +
                         `${e.gym ? `<div>${e.gym}</div>` : ''}` +
