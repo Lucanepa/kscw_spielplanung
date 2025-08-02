@@ -201,48 +201,28 @@
       }
     }
     
-    /* Display mode classes */
-    .mobile-mode .match-container {
-      display: none !important;
+    /* Simple responsive display */
+    @media (max-width: 768px) {
+      .match-container {
+        display: none !important;
+      }
+      .match-container-compact {
+        display: block !important;
+      }
     }
-    .mobile-mode .match-container-compact {
-      display: block !important;
-    }
-    .mobile-mode .match {
-      display: none !important;
+    
+    @media (min-width: 769px) {
+      .match-container-compact {
+        display: none !important;
+      }
+      .match-container {
+        display: flex !important;
+      }
     }
     
     .hide-absences .match-container .match-content.absence-entry,
     .hide-absences .match-container-compact.absence-entry {
       display: none !important;
-    }
-    
-    .desktop-mode .match-container-compact {
-      display: none !important;
-    }
-    .desktop-mode .match-container {
-      display: flex !important;
-    }
-    
-    @media (max-width: 768px) {
-      .auto-mobile .match-container {
-        display: none !important;
-      }
-      .auto-mobile .match-container-compact {
-        display: block !important;
-      }
-      .auto-mobile .match {
-        display: none !important;
-      }
-    }
-    
-    @media (min-width: 769px) {
-      .auto-mobile .match-container-compact {
-        display: none !important;
-      }
-      .auto-mobile .match-container {
-        display: flex !important;
-      }
     }
     
     /* Modal styles */
@@ -413,10 +393,7 @@
     <div class="d-flex flex-wrap align-items-center gap-3 mt-2">
       <button class="btn btn-primary" onclick="loadData()">🔄 Refresh</button>
 
-      <div class="view-toggle-group">
-        <button class="btn btn-outline-secondary active" id="desktop-view-btn" onclick="switchDisplayMode('desktop')" title="Desktop View">🖥️</button>
-        <button class="btn btn-outline-secondary" id="mobile-view-btn" onclick="switchDisplayMode('mobile')" title="Mobile View">📱</button>
-      </div>
+
 
       <div class="view-toggle-group">
         <button class="btn btn-outline-primary active" id="calendar-view-btn" onclick="switchView('calendar')">📅 Calendar</button>
@@ -492,7 +469,6 @@
     // Global variables
     let currentView = 'calendar';
     let currentListOrg = 'day';
-    let currentDisplayMode = 'auto';
     let allMatches = [];
     let allClosures = [];
     let teamFullNames = {};
@@ -547,43 +523,7 @@
         .forEach(team => teamFilterSelect.append(new Option(team, team)));
     }
 
-    function switchDisplayMode(mode) {
-      currentDisplayMode = mode;
-      
-      document.getElementById('desktop-view-btn').classList.toggle('active', mode === 'desktop');
-      document.getElementById('mobile-view-btn').classList.toggle('active', mode === 'mobile');
-      
-      const body = document.body;
-      body.classList.remove('mobile-mode', 'desktop-mode', 'auto-mobile');
-      
-      if (mode === 'mobile') {
-        body.classList.add('mobile-mode');
-        if (!window.userHasSetAbsences) {
-          document.getElementById('show-absences-switch').checked = false;
-        }
-      } else if (mode === 'desktop') {
-        body.classList.add('desktop-mode');
-        if (!window.userHasSetAbsences) {
-          document.getElementById('show-absences-switch').checked = true;
-        }
-      } else {
-        body.classList.add('auto-mobile');
-        if (!window.userHasSetAbsences) {
-          if (window.innerWidth <= 768) {
-            document.getElementById('show-absences-switch').checked = false;
-          } else {
-            document.getElementById('show-absences-switch').checked = true;
-          }
-        }
-      }
-      
-      // Re-apply filters after mode change
-      if (currentView === 'calendar') {
-        applyFilters();
-      } else {
-        applyListFilters();
-      }
-    }
+
 
     function switchView(view) {
       currentView = view;
@@ -612,7 +552,7 @@
       renderListView();
     }
 
-    // FIXED FILTER FUNCTION
+    // SIMPLIFIED FILTER FUNCTION
     function applyFilters() {
       const sportVal = sportFilterSelect.value;
       const showAbs = showAbsencesSwitch.checked;
@@ -625,8 +565,6 @@
       console.log('Team filter:', teamVal);
       console.log('Type filter:', typeVal);
 
-      
-
       // Handle absences visibility with CSS class
       const body = document.body;
       if (!showAbs) {
@@ -635,75 +573,33 @@
         body.classList.remove('hide-absences');
       }
 
-      // Filter desktop elements
-      let desktopVisible = 0;
-      let desktopHidden = 0;
-      document.querySelectorAll('.match-container').forEach(el => {
+      // Filter all elements
+      let visible = 0;
+      let hidden = 0;
+      
+      document.querySelectorAll('.match-container, .match-container-compact').forEach(el => {
         const matchContent = el.querySelector('.match-content');
         const isAbs = matchContent && matchContent.classList.contains('absence-entry');
-        let visible = true;
+        let shouldShow = true;
         
         // Apply filters
-        if (sportVal !== 'all' && el.dataset.sport !== sportVal) visible = false;
-        if (visible && teamVal !== 'all' && el.dataset.team !== teamVal) visible = false;
-        if (visible && !isAbs && typeVal !== 'all' && !el.dataset.type.includes(typeVal)) visible = false;
+        if (sportVal !== 'all' && el.dataset.sport !== sportVal) shouldShow = false;
+        if (shouldShow && teamVal !== 'all' && el.dataset.team !== teamVal) shouldShow = false;
+        if (shouldShow && !isAbs && typeVal !== 'all' && !el.dataset.type.includes(typeVal)) shouldShow = false;
 
-        // Set visibility based on display mode AND filter
-        const isDesktopMode = document.body.classList.contains('desktop-mode') || 
-                             (document.body.classList.contains('auto-mobile') && window.innerWidth > 768);
-        
-        if (visible && isDesktopMode) {
-          el.style.display = 'flex';
+        // Set visibility
+        if (shouldShow) {
+          el.style.display = '';
           el.classList.remove('d-none');
-          desktopVisible++;
-        } else if (!visible) {
-          // Element is filtered out
-          el.style.display = 'none';
-          el.classList.add('d-none');
-          desktopHidden++;
+          visible++;
         } else {
-          // Element is visible but wrong display mode - hide it
           el.style.display = 'none';
           el.classList.add('d-none');
-          desktopHidden++;
+          hidden++;
         }
       });
 
-      // Filter mobile elements
-      let mobileVisible = 0;
-      let mobileHidden = 0;
-      document.querySelectorAll('.match-container-compact').forEach(el => {
-        const isAbs = el.classList.contains('absence-entry');
-        let visible = true;
-        
-        // Apply filters
-        if (sportVal !== 'all' && el.dataset.sport !== sportVal) visible = false;
-        if (visible && teamVal !== 'all' && el.dataset.team !== teamVal) visible = false;
-        if (visible && !isAbs && typeVal !== 'all' && !el.dataset.type.includes(typeVal)) visible = false;
-
-        // Set visibility based on display mode AND filter
-        const isMobileMode = document.body.classList.contains('mobile-mode') || 
-                            (document.body.classList.contains('auto-mobile') && window.innerWidth <= 768);
-        
-        if (visible && isMobileMode) {
-          el.style.display = 'flex';
-          el.classList.remove('d-none');
-          mobileVisible++;
-        } else if (!visible) {
-          // Element is filtered out
-          el.style.display = 'none';
-          el.classList.add('d-none');
-          mobileHidden++;
-        } else {
-          // Element is visible but wrong display mode - hide it
-          el.style.display = 'none';
-          el.classList.add('d-none');
-          mobileHidden++;
-        }
-      });
-
-      console.log('Desktop - Visible:', desktopVisible, 'Hidden:', desktopHidden);
-      console.log('Mobile - Visible:', mobileVisible, 'Hidden:', mobileHidden);
+      console.log('Visible:', visible, 'Hidden:', hidden);
       console.log('=== FILTERS APPLIED ===');
     }
 
@@ -1087,10 +983,8 @@
 
 
 
-    // FIXED EVENT LISTENERS
+    // SIMPLIFIED EVENT LISTENERS
     document.addEventListener('DOMContentLoaded', () => {
-      const isMobile = window.innerWidth <= 768;
-      switchDisplayMode(isMobile ? 'mobile' : 'desktop');
       loadData();
       
       // Set up filter event listeners
@@ -1103,7 +997,6 @@
       });
       
       showAbsencesSwitch.addEventListener('change', () => {
-        window.userHasSetAbsences = true;
         if (currentView === 'calendar') {
           applyFilters();
         } else {
