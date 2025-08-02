@@ -411,10 +411,10 @@
         <option value="Basketball">Basketball</option>
       </select>
 
-      <div class="form-check form-switch">
-        <input class="form-check-input" type="checkbox" role="switch" id="show-absences-switch" checked>
-        <label class="form-check-label" for="show-absences-switch">Show Absences</label>
-      </div>
+             <div class="form-check form-switch">
+         <input class="form-check-input" type="checkbox" role="switch" id="show-absences-switch">
+         <label class="form-check-label" for="show-absences-switch">Show Absences</label>
+       </div>
 
       <select id="team-filter" class="form-select form-select-sm" style="width:auto;">
         <option value="all">All Teams</option>
@@ -587,13 +587,13 @@
         if (shouldShow && teamVal !== 'all' && el.dataset.team !== teamVal) shouldShow = false;
         if (shouldShow && !isAbs && typeVal !== 'all' && !el.dataset.type.includes(typeVal)) shouldShow = false;
 
-        // Set visibility
+        // Set visibility with !important to override CSS
         if (shouldShow) {
-          el.style.display = '';
+          el.style.setProperty('display', '', 'important');
           el.classList.remove('d-none');
           visible++;
         } else {
-          el.style.display = 'none';
+          el.style.setProperty('display', 'none', 'important');
           el.classList.add('d-none');
           hidden++;
         }
@@ -601,6 +601,16 @@
 
       console.log('Visible:', visible, 'Hidden:', hidden);
       console.log('=== FILTERS APPLIED ===');
+      
+      // Debug: Check first few elements
+      const firstElements = document.querySelectorAll('.match-container, .match-container-compact');
+      if (firstElements.length > 0) {
+        console.log('First element data:', {
+          team: firstElements[0].dataset.team,
+          type: firstElements[0].dataset.type,
+          sport: firstElements[0].dataset.sport
+        });
+      }
     }
 
     function applyListFilters() {
@@ -619,12 +629,12 @@
           if (visible && teamVal !== 'all' && el.dataset.team !== teamVal) visible = false;
           if (visible && !isAbs && typeVal !== 'all' && !el.dataset.type.includes(typeVal)) visible = false;
 
-          el.style.display = visible ? 'flex' : 'none';
+          el.style.setProperty('display', visible ? 'flex' : 'none', 'important');
         });
         
         document.querySelectorAll('.list-day').forEach(section => {
           const visibleMatches = section.querySelectorAll('.list-match:not([style*="display: none"])').length;
-          section.style.display = visibleMatches > 0 ? 'block' : 'none';
+          section.style.setProperty('display', visibleMatches > 0 ? 'block' : 'none', 'important');
         });
       } else {
         document.querySelectorAll('.list-team tbody tr').forEach(el => {
@@ -634,12 +644,12 @@
           if (visible && teamVal !== 'all' && el.dataset.team !== teamVal) visible = false;
           if (visible && typeVal !== 'all' && !el.dataset.type.includes(typeVal)) visible = false;
 
-          el.style.display = visible ? 'table-row' : 'none';
+          el.style.setProperty('display', visible ? 'table-row' : 'none', 'important');
         });
         
         document.querySelectorAll('.list-team').forEach(section => {
           const visibleRows = section.querySelectorAll('tbody tr:not([style*="display: none"])').length;
-          section.style.display = visibleRows > 0 ? 'block' : 'none';
+          section.style.setProperty('display', visibleRows > 0 ? 'block' : 'none', 'important');
         });
       }
     }
