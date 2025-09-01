@@ -30,6 +30,17 @@
       font-size: 12px;
       position: relative;
     }
+    
+    /* Special date highlighting */
+    .calendar td.special-date {
+      background-color: #ffeb3b !important;
+      background-image: linear-gradient(45deg, #ffeb3b 25%, transparent 25%), 
+                        linear-gradient(-45deg, #ffeb3b 25%, transparent 25%), 
+                        linear-gradient(45deg, transparent 75%, #ffeb3b 75%), 
+                        linear-gradient(-45deg, transparent 75%, #ffeb3b 75%);
+      background-size: 20px 20px;
+      background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+    }
     .calendar th { background: #007bff; color: white; }
     .match {
       display: block;
@@ -697,9 +708,9 @@
           const key = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
           const evs = byMatch[key] || [], reason = byClose[key];
           const isSpecial = specialDates.includes(key);
-          const cellBg = isSpecial ? 'background:#fff9c4;' : '';
+          const specialClass = isSpecial ? 'special-date' : '';
           const caption = isSpecial ? ` <small style="color:#856404">Spielsamstag</small>` : '';
-          let cell = `<td style="${cellBg}"><strong style="position: relative; z-index: 20;">${d}</strong>${caption}`;
+          let cell = `<td class="${specialClass}"><strong style="position: relative; z-index: 20;">${d}</strong>${caption}`;
           evs.forEach(e => {
             const attrs = `data-team="${e.team}" data-type="${e.type}" data-sport="${e.sport || ''}"`;
             if (e.isPref) {
