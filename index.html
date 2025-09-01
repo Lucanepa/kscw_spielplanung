@@ -33,7 +33,7 @@
     
     /* Special date highlighting */
     .calendar td.special-date {
-      background-color: #ffeb3b !important;
+      background-color: #fff386 !important;
       background-image: linear-gradient(45deg, #ffeb3b 25%, transparent 25%), 
                         linear-gradient(-45deg, #ffeb3b 25%, transparent 25%), 
                         linear-gradient(45deg, transparent 75%, #ffeb3b 75%), 
@@ -684,6 +684,9 @@
     }
 
     function renderCalendar(matches, closures) {
+      console.log('=== RENDERING CALENDAR ===');
+      console.log('Special dates array:', specialDates);
+      
       const byMatch = {}, byClose = {};
       matches.forEach(e => { (byMatch[e.date] = byMatch[e.date] || []).push(e);
         if (e.team && !teamColor[e.team]) teamColor[e.team] = '#ccc';
@@ -710,6 +713,12 @@
           const isSpecial = specialDates.includes(key);
           const specialClass = isSpecial ? 'special-date' : '';
           const caption = isSpecial ? ` <small style="color:#856404">Spielsamstag</small>` : '';
+          
+          // Debug logging for special dates
+          if (isSpecial) {
+            console.log(`Special date found: ${key}, applying class: ${specialClass}`);
+          }
+          
           let cell = `<td class="${specialClass}"><strong style="position: relative; z-index: 20;">${d}</strong>${caption}`;
           evs.forEach(e => {
             const attrs = `data-team="${e.team}" data-type="${e.type}" data-sport="${e.sport || ''}"`;
